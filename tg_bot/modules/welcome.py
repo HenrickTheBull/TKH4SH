@@ -229,7 +229,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome SARDEGNA_USERS
             elif new_mem.id in WHITELIST_USERS:
                 update.effective_message.reply_text(
-                    "Oof! A Neptuia Nation just joined!", reply_to_message_id=reply
+                    "Oof! A Whitelisted just joined!", reply_to_message_id=reply
                 )
                 continue
 

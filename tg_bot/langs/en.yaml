@@ -1,7 +1,7 @@
 # Language name in their native
 language: "English 🇺🇲"
 # name of people(s) who worked on this translation
-authors: "@dank_as_fuck"
+authors: "@dank_as_fuck, HenrickTheBull"
 
 # languages
 curr_chat_lang: "Hey. Your current language is {}, select the one you want from the buttons below :)"
@@ -10,13 +10,13 @@ set_chat_lang: "Great, {} it is from now on!"
 
 pm_start_text: |
    Hi {}, my name is {}!
-   I am an Anime themed group management bot with some fun extras ;)
+   I am an Synth themed group management bot with some fun extras ;)
    Try the buttons below to know how I work.
    
-grp_start_text: "Hi, I'm Kigyo."
+grp_start_text: "Hi, I'm H4SH."
 
 pm_help_text: |
-   Hello there! My name is *Kigyo*. A part of *Eagle Union*.
+   Hello there! My name is *H4SH*. A part of *Grand Aurochs*.
    I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of
    the things I can help you with.
    *Main* commands available:
@@ -28,7 +28,7 @@ pm_help_text: |
       - in a group: will redirect you to pm, with all that chat's settings.
     Click on the buttons below to get documentation about specific modules!
 
-add_bot_to_group_btn: "Add Kigyo"
+add_bot_to_group_btn: "Add H4SH"
 support_chat_link_btn: "Support"
 updates_channel_link_btn: "Updates"
 src_btn: "Source code"
@@ -208,7 +208,7 @@ antispam_help: |
      you and your groups by removing spam flooders as quickly as possible.
      *Note:* Users can appeal gbans or report spammers at @YorkTownEagleUnion
 
-     Kigyo also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
+     H4SH also integrates @Spamwatch and @Intellivoid's SpamProtectionBot API to remove Spammers as much as possible from your chatroom!
      *What is SpamWatch?*
      SpamWatch maintains a large constantly updated ban-list of spambots, trolls, bitcoin spammers and unsavoury characters.
      Constantly help banning spammers off from your group automatically So, you wont have to worry about spammers storming your group.
@@ -262,7 +262,7 @@ log_help: |
       • forwarding the `/setlog` to the group
 
 markdown_help_text: |
-      Markdown is a very powerful formatting tool supported by telegram. Kigyo has some enhancements, to make sure that
+      Markdown is a very powerful formatting tool supported by telegram. H4SH has some enhancements, to make sure that
       saved messages are correctly parsed, and to allow you to create buttons.
 
       - <code>_italic_</code>: wrapping text with '_' will produce italic text
