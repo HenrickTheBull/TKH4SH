@@ -198,7 +198,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Devs
             elif new_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "Whoa! A member of the Eagle Union just joined!",
+                    "Whoa! A member of Grand Aurochs Software just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -206,7 +206,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Sudos
             elif new_mem.id in SUDO_USERS:
                 update.effective_message.reply_text(
-                    "Huh! A Royal Nation just joined! Stay Alert!",
+                    "Huh! A bot admin just joined! Stay Alert!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -214,7 +214,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Support
             elif new_mem.id in SUPPORT_USERS:
                 update.effective_message.reply_text(
-                    "Huh! Someone with a Sakura Nation level just joined!",
+                    "Huh! Bot Support just joined!",
                     reply_to_message_id=reply,
                 )
                 continue
@@ -222,7 +222,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome Whitelisted
             elif new_mem.id in SARDEGNA_USERS:
                 update.effective_message.reply_text(
-                    "Oof! A Sadegna Nation just joined!", reply_to_message_id=reply
+                    "Oof! A Whitelisted User just joined!", reply_to_message_id=reply
                 )
                 continue
 
@@ -236,7 +236,7 @@ def new_member(update: Update, context: CallbackContext):
             # Welcome yourself
             elif new_mem.id == bot.id:
                 update.effective_message.reply_text(
-                    "Thanks for adding me! Join @YorkTownEagleUnion for support.",
+                    "Thanks for adding me! Join @GASoftware for support.",
                     reply_to_message_id=reply,
                 )
                 continue

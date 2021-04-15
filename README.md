@@ -20,7 +20,7 @@
 
 A modular telegram Python bot running on python3 with an sqlalchemy database.
 
-Originally a marie fork - Kigyō has evolved further and was built to be more useful for Anime Chats.
+Originally a marie fork, then on Kigyō, H4SH will evolve over time for a network style community exising both on Discord and Telegram.
 
 Can be found on telegram as [Kigyō](https://t.me/kigyorobot).
 
@@ -33,7 +33,7 @@ The Support group can be reached out to at [Eagle Union](https://t.me/YorktownEa
 
 # How to setup
 
-- `git clone https://github.com/Dank-del/EnterpriseALRobot`
+- `git clone https://github.com/HenrickTheBull/TKH4SH`
 - `cd EnterpriseALRobot`
 - `cp sample_config.ini config.ini`
 - *Fill in all the vars*
@@ -46,16 +46,12 @@ The Support group can be reached out to at [Eagle Union](https://t.me/YorktownEa
 For queries or any issues regarding the bot please open an issue ticket or visit us at [Eagle Union](https://t.me/YorktownEagleUnion)  
 
 ## Credits
-The bot is based of on the original work done by [PaulSonOfLars](https://github.com/PaulSonOfLars)
-This repo was just reamped to suit an Anime-centric community. All original credits go to Paul and his dedication, Without his efforts, this fork would not have been possible!
+The bot is based of on the original work done by [PaulSonOfLars](https://github.com/PaulSonOfLars) and by the further work of [Dank-del](https://GitHub.com/Dank-del/)
+This repo is being revamed to suit a network style community.
 
-
-Should any be missing kindly let us know at [Eagle Union](https://t.me/YorktownEagleUnion) or simply submit a pull request on the readme.
 
 
 -------------------------------------------------------------------------------------
 
 
-<a href="http://u.fsf.org/16e"><img src="https://static.fsf.org/nosvn/images/badges/fsfs_icons_red-bg.png" alt="Free Software, Free Society"></a>   
-
-*Kigyo is free and open source software and supports the right to read, distribute and repair.*
+*H4SH is a fork of Kigyo and is free and open source software and supports the right to read, distribute and repair.*
