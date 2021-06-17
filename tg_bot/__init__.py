@@ -23,7 +23,7 @@ logging.basicConfig(handlers=[RichHandler()], level=logging.INFO, format=FORMAT,
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 log = logging.getLogger("rich")
 
-log.info("[H4SH] H4SH is starting. | An Aurochs Software Project Forked From Eagle Union. | Licensed under GPLv3.")
+log.info("[H4SH] H4SH is starting. | An Grand Aurochs Software Project Forked From Eagle Union. | Licensed under GPLv3.")
 
 log.info("[H4SH] Not affiliated with anyone unless excplicitly stated.")
 log.info("[H4SH] Project maintained by: github.com/HenrickTheBull (t.me/HenrickTheBull)")
