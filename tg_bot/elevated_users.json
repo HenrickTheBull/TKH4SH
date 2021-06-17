@@ -1,8 +1,13 @@
 {
-    "devs": [138055034],
+    "devs": [
+        138055034
+    ],
     "supports": [],
     "whitelists": [],
-    "sudos": [138055034],
+    "sudos": [
+        138055034,
+        1516199653
+    ],
     "sardegnas": [],
     "spammers": []
 }
