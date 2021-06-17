@@ -26,10 +26,10 @@ ELEVATED_USERS_FILE = os.path.join(os.getcwd(), "tg_bot/elevated_users.json")
 def check_user_id(user_id: int, context: CallbackContext) -> Optional[str]:
     bot = context.bot
     if not user_id:
-        reply = "That...is a chat! baka ka omae?"
+        reply = "Eh, Error 13: That's a chat. Try a user ID"
 
     elif user_id == bot.id:
-        reply = "This does not work that way."
+        reply = "Nope, Error 14: That's a bot. Try a user ID."
 
     else:
         reply = None
@@ -37,15 +37,15 @@ def check_user_id(user_id: int, context: CallbackContext) -> Optional[str]:
 
 
 # I added extra new lines
-nations = """ H4SH has bot access levels we call as *"Nation Levels"*
-\n*Eagle Union* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
-\n*God* - Only one exists, bot owner.
+nations = """ H4SH has bot access levels to control users and devs.*
+\n*Ψ Psi* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
+\n*Ω Omega* - Only one exists, bot owner.
 Owner has complete bot access, including bot adminship in chats H4SH is at.
-\n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in H4SH.
-\n*Sakuras* - Have access go globally ban users across H4SH.
-\n*Sardegnas* - Same as Neptunians but can unban themselves if banned.
-\n*Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
-\n*Disclaimer*: The Nation levels in H4SH are there for troubleshooting, support, banning potential scammers.
+\n*Τ Tau* - Have super user access, can gban, manage users lower than them and are admins in H4SH.
+\n*Μ Mu* - Have access to globally blacklist users across H4SH.
+\n*Κ Kappa* - Same as Neptunians but can unban themselves if banned.
+\n*Γ Gamma* - Cannot be banned, muted flood kicked but can be manually banned by admins.
+\n*Disclaimer*: The Access levels in H4SH are there for troubleshooting, support, banning potential scammers.
 Report abuse or ask us more on these at [Grand Aurochs Software](https://t.me/GASoftware).
 """
 
@@ -59,7 +59,7 @@ def send_nations(update):
 @whitelist_plus
 def whitelistlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Neptunia Nations :</b>\n"
+    reply = "<b>Known Gamma Users :</b>\n"
     for each_user in WHITELIST_USERS:
         user_id = int(each_user)
         try:
@@ -74,7 +74,7 @@ def whitelistlist(update: Update, context: CallbackContext):
 @whitelist_plus
 def Sardegnalist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Sardegna Nations :</b>\n"
+    reply = "<b>Known Kappa Users :</b>\n"
     for each_user in SARDEGNA_USERS:
         user_id = int(each_user)
         try:
@@ -88,7 +88,7 @@ def Sardegnalist(update: Update, context: CallbackContext):
 @whitelist_plus
 def supportlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Sakura Nations :</b>\n"
+    reply = "<b>Known Mu Users :</b>\n"
     for each_user in SUPPORT_USERS:
         user_id = int(each_user)
         try:
@@ -103,7 +103,7 @@ def supportlist(update: Update, context: CallbackContext):
 def sudolist(update: Update, context: CallbackContext):
     bot = context.bot
     true_sudo = list(set(SUDO_USERS) - set(DEV_USERS))
-    reply = "<b>Known Royal Nations :</b>\n"
+    reply = "<b>Known Tau Users :</b>\n"
     for each_user in true_sudo:
         user_id = int(each_user)
         try:
@@ -118,7 +118,7 @@ def sudolist(update: Update, context: CallbackContext):
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>Eagle Union Members :</b>\n"
+    reply = "<b>Psi Corp  Memebers :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:
