@@ -55,3 +55,5 @@ This repo is being revamed to suit a network style community that isn't anime th
 
 
 *H4SH is a fork of Kigyo and is free and open source software and supports the right to read, distribute and repair.*
+
+[![forthebadge](https://forthebadge.com/images/badges/mom-made-pizza-rolls.svg)](https://forthebadge.com)
