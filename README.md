@@ -6,12 +6,12 @@
 
 
 ![Python Version](https://img.shields.io/badge/python-3.8-green?style=for-the-badge&logo=appveyor)
-![Issues](https://img.shields.io/github/issues/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)
-![Forks](https://img.shields.io/github/forks/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)
-![Stars](https://img.shields.io/github/stars/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)
-![LICENSE](https://img.shields.io/github/license/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)
-![Contributors](https://img.shields.io/github/contributors/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)
-![Repository Size](https://img.shields.io/github/repo-size/HenrickTheBull/TK4SH?style=for-the-badge&logo=appveyor)</br>
+![Issues](https://img.shields.io/github/issues/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)
+![Forks](https://img.shields.io/github/forks/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)
+![Stars](https://img.shields.io/github/stars/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)
+![LICENSE](https://img.shields.io/github/license/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)
+![Contributors](https://img.shields.io/github/contributors/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)
+![Repository Size](https://img.shields.io/github/repo-size/HenrickTheBull/TKH4SH?style=for-the-badge&logo=appveyor)</br>
 
 
 [![Join Support!](https://img.shields.io/badge/Support%20Chat-GASoftware-red)](https://t.me/GASoftware)
