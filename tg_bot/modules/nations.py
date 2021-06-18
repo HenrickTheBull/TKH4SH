@@ -59,7 +59,7 @@ def send_nations(update):
 @whitelist_plus
 def whitelistlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Gamma Users :</b>\n"
+    reply = "<b>Known Gamma Level Users:</b>\n"
     for each_user in WHITELIST_USERS:
         user_id = int(each_user)
         try:
@@ -74,7 +74,7 @@ def whitelistlist(update: Update, context: CallbackContext):
 @whitelist_plus
 def Sardegnalist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Kappa Users :</b>\n"
+    reply = "<b>Known Kappa Level Users:</b>\n"
     for each_user in SARDEGNA_USERS:
         user_id = int(each_user)
         try:
@@ -88,7 +88,7 @@ def Sardegnalist(update: Update, context: CallbackContext):
 @whitelist_plus
 def supportlist(update: Update, context: CallbackContext):
     bot = context.bot
-    reply = "<b>Known Mu Users :</b>\n"
+    reply = "<b>Known Mu Level Users:</b>\n"
     for each_user in SUPPORT_USERS:
         user_id = int(each_user)
         try:
@@ -103,7 +103,7 @@ def supportlist(update: Update, context: CallbackContext):
 def sudolist(update: Update, context: CallbackContext):
     bot = context.bot
     true_sudo = list(set(SUDO_USERS) - set(DEV_USERS))
-    reply = "<b>Known Tau Users :</b>\n"
+    reply = "<b>Known Tau Level Users :</b>\n"
     for each_user in true_sudo:
         user_id = int(each_user)
         try:
@@ -118,7 +118,7 @@ def sudolist(update: Update, context: CallbackContext):
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>Psi Corp  Memebers :</b>\n"
+    reply = "<b>Psi Corp Memebers:</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:
@@ -135,14 +135,14 @@ def get_help(chat):
     return gs(chat, "nation_help")
 
 WHITELISTLIST_HANDLER = CommandHandler(
-    ["whitelistlist", "neptunians"], whitelistlist, run_async=True
+    ["whitelistlist", "gammas"], whitelistlist, run_async=True
 )
-SARDEGNALIST_HANDLER = CommandHandler(["sardegnas"], Sardegnalist, run_async=True)
+SARDEGNALIST_HANDLER = CommandHandler(["kappas"], Sardegnalist, run_async=True)
 SUPPORTLIST_HANDLER = CommandHandler(
-    ["supportlist", "sakuras"], supportlist, run_async=True
+    ["supportlist", "mus"], supportlist, run_async=True
 )
-SUDOLIST_HANDLER = CommandHandler(["sudolist", "royals"], sudolist, run_async=True)
-DEVLIST_HANDLER = CommandHandler(["devlist", "eagle"], devlist, run_async=True)
+SUDOLIST_HANDLER = CommandHandler(["sudolist", "taus"], sudolist, run_async=True)
+DEVLIST_HANDLER = CommandHandler(["devlist", "psis"], devlist, run_async=True)
 
 dispatcher.add_handler(WHITELISTLIST_HANDLER)
 dispatcher.add_handler(SARDEGNALIST_HANDLER)
