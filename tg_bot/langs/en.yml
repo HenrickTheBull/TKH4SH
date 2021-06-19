@@ -393,11 +393,11 @@ greetings_help: |
        • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
 
 nation_help: |
-      - /eagle - Lists all Eagle Union members.
-      - /royals - Lists all Royal Nations.
-      - /sakuras - Lists all Sakura Nations.
-      - /sardegnas - Lists all Sardegnas Nations.
-      - /neptunians - Lists all Neptunia Nations.
+      - /psis - Lists all Psi Level members.
+      - /taus - Lists all Tau members.
+      - /mus - Lists all Mu members.
+      - /kappas - Lists all Kappa members.
+      - /gammass - Lists all Gamma members.
       Note: These commands list users with special bot priveleges and can only be used by them.
       You can visit @GASoftware to query more about these.
 
