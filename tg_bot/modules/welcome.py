@@ -506,7 +506,7 @@ def left_member(update: Update, context: CallbackContext):
             # Give the devs a special goodbye
             elif left_mem.id in DEV_USERS:
                 update.effective_message.reply_text(
-                    "See you later at the Eagle Union!",
+                    "See you later Console Cowboy",
                     reply_to_message_id=reply,
                 )
                 return

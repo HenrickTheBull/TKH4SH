@@ -43,7 +43,7 @@ nations = """ H4SH has bot access levels to control users and devs.*
 Owner has complete bot access, including bot adminship in chats H4SH is at.
 \n*Τ Tau* - Have super user access, can gban, manage users lower than them and are admins in H4SH.
 \n*Μ Mu* - Have access to globally blacklist users across H4SH.
-\n*Κ Kappa* - Same as Neptunians but can unban themselves if banned.
+\n*Κ Kappa* - Same as Gamma but can unban themselves if banned.
 \n*Γ Gamma* - Cannot be banned, muted flood kicked but can be manually banned by admins.
 \n*Disclaimer*: The Access levels in H4SH are there for troubleshooting, support, banning potential scammers.
 Report abuse or ask us more on these at [Grand Aurochs Software](https://t.me/GASoftware).
@@ -103,7 +103,7 @@ def supportlist(update: Update, context: CallbackContext):
 def sudolist(update: Update, context: CallbackContext):
     bot = context.bot
     true_sudo = list(set(SUDO_USERS) - set(DEV_USERS))
-    reply = "<b>Known Tau Level Users :</b>\n"
+    reply = "<b>Known Tau Level Users:</b>\n"
     for each_user in true_sudo:
         user_id = int(each_user)
         try:

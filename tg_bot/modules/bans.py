@@ -64,22 +64,22 @@ def ban(update, context):
 
     if is_user_ban_protected(chat, user_id, member) and user not in DEV_USERS:
         if user_id == OWNER_ID:
-            message.reply_text("I'd never ban my owner.")
+            message.reply_text("Omega Level Override.")
             return log_message
         elif user_id in DEV_USERS:
-            message.reply_text("I can't act against our own.")
+            message.reply_text("Psi Corps Exception: Psi Corps Members can not be banned by me.")
             return log_message
         elif user_id in SUDO_USERS:
-            message.reply_text("My sudos are ban immune")
+            message.reply_text("Tau Level Exception: Tau Level Members can not be banned by me.")
             return log_message
         elif user_id in SUPPORT_USERS:
-            message.reply_text("My support users are ban immune")
+            message.reply_text("Mu Level Exception: Because Mus are support staff they can not be banned by me")
             return log_message
         elif user_id in SARDEGNA_USERS:
-            message.reply_text("Bring an order from Eagle Union to fight a Sardegna.")
+            message.reply_text("Kappa Level Error: Kappas can not be banned by me.")
             return log_message
         elif user_id in WHITELIST_USERS:
-            message.reply_text("Neptunians are ban immune!")
+            message.reply_text("Gamma Level Whitelist Exception")
             return log_message
         else:
             message.reply_text("This user has immunity and cannot be banned.")

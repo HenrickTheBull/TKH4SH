@@ -198,22 +198,22 @@ def inlineinfo(query: str, update: Update, context: CallbackContext) -> None:
     text += f"\nChat count: <code>{num_chats}</code>"
 
     if user.id == OWNER_ID:
-        text += f"\nThis person is my owner"
+        text += f"\nThis User is Omega Class and my Owner"
         nation_level_present = True
     elif user.id in DEV_USERS:
-        text += f"\nThis Person is a part of Eagle Union"
+        text += f"\nThis User is a member of Psi Corps"
         nation_level_present = True
     elif user.id in SUDO_USERS:
-        text += f"\nThe Nation level of this person is Royal"
+        text += f"\nThis User is Tau Level"
         nation_level_present = True
     elif user.id in SUPPORT_USERS:
-        text += f"\nThe Nation level of this person is Sakura"
+        text += f"\nThis User is Mu Level"
         nation_level_present = True
     elif user.id in SARDEGNA_USERS:
-        text += f"\nThe Nation level of this person is Sardegna"
+        text += f"\nThis User is Kappa Level"
         nation_level_present = True
     elif user.id in WHITELIST_USERS:
-        text += f"\nThe Nation level of this person is Neptunia"
+        text += f"\nThis User is Gamma Level"
         nation_level_present = True
 
     if nation_level_present:
@@ -225,7 +225,7 @@ def inlineinfo(query: str, update: Update, context: CallbackContext) -> None:
             [
                 InlineKeyboardButton(
                     text="Report Error",
-                    url=f"https://t.me/YorktownEagleUnion",
+                    url=f"https://t.me/GASoftware",
                 ),
                 InlineKeyboardButton(
                     text="Search again",
@@ -267,22 +267,22 @@ def about(query: str, update: Update, context: CallbackContext) -> None:
             [
                 InlineKeyboardButton(
                     text="Support",
-                    url=f"https://t.me/YorktownEagleUnion",
+                    url=f"https://t.me/GASoftware",
                 ),
                 InlineKeyboardButton(
                     text="Channel",
-                    url=f"https://t.me/KigyoUpdates",
+                    url=f"https://t.me/H4SHUpdates",
                 ),
 
             ],
             [
                 InlineKeyboardButton(
                     text="GitLab",
-                    url=f"https://www.gitlab.com/Dank-del/EnterpriseALRobot",
+                    url=f"https://www.gitlab.com/HenrickTheBull/TKH4SH",
                 ),
                 InlineKeyboardButton(
                     text="GitHub",
-                    url="https://www.github.com/Dank-del/EnterpriseALRobot",
+                    url="https://www.github.com/HenrickTheBull/TKH4SH",
                 ),
             ],
         ])
@@ -292,7 +292,7 @@ def about(query: str, update: Update, context: CallbackContext) -> None:
         InlineQueryResultArticle
             (
             id=str(uuid4()),
-            title=f"About Kigyo (@{context.bot.username})",
+            title=f"About H4SH (@{context.bot.username})",
             input_message_content=InputTextMessageContent(about_text, parse_mode=ParseMode.MARKDOWN,
                                                           disable_web_page_preview=True),
             reply_markup=kb
@@ -363,7 +363,7 @@ def spb(query: str, update: Update, context: CallbackContext) -> None:
             [
                 InlineKeyboardButton(
                     text="Report Error",
-                    url=f"https://t.me/YorktownEagleUnion",
+                    url=f"https://t.me/GASoftware",
                 ),
                 InlineKeyboardButton(
                     text="Search again",
@@ -507,7 +507,7 @@ def media_query(query: str, update: Update, context: CallbackContext) -> None:
                 [
                     InlineKeyboardButton(
                         text="Report error",
-                        url="t.me/YorktownEagleUnion",
+                        url="t.me/GASoftware",
                     ),
                     InlineKeyboardButton(
                         text="Search again",
