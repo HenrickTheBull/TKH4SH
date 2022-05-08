@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from tg_bot import log
 from tg_bot.modules.users import get_user_id
@@ -12,6 +12,8 @@ def id_from_reply(message):
         return None, None
     user_id = prev_message.from_user.id
     res = message.text.split(None, 1)
+    if prev_message.sender_chat:
+        user_id = prev_message.sender_chat.id
     if len(res) < 2:
         return user_id, ""
     return user_id, res[1]
@@ -23,7 +25,7 @@ def extract_user(message: Message, args: List[str]) -> Optional[int]:
 
 def extract_user_and_text(
     message: Message, args: List[str]
-) -> (Optional[int], Optional[str]):
+) -> Tuple[Optional[int], Optional[str]]:
     prev_message = message.reply_to_message
     split_text = message.text.split(None, 1)
 
@@ -35,11 +37,7 @@ def extract_user_and_text(
     text = ""
 
     entities = list(message.parse_entities([MessageEntity.TEXT_MENTION]))
-    if len(entities) > 0:
-        ent = entities[0]
-    else:
-        ent = None
-
+    ent = entities[0] if entities else None
     # if entity offset matches (command end/text start) then all good
     if entities and ent and ent.offset == len(message.text) - len(text_to_parse):
         ent = entities[0]
@@ -62,7 +60,7 @@ def extract_user_and_text(
             if len(res) >= 3:
                 text = res[2]
 
-    elif len(args) >= 1 and args[0].isdigit():
+    elif len(args) >= 1 and args[0].lstrip("-").isdigit():
         user_id = int(args[0])
         res = message.text.split(None, 2)
         if len(res) >= 3:
@@ -101,7 +99,7 @@ def extract_text(message) -> str:
 
 def extract_unt_fedban(
     message: Message, args: List[str]
-) -> (Optional[int], Optional[str]):
+) -> Tuple[Optional[int], Optional[str]]:  # sourcery no-metrics
     prev_message = message.reply_to_message
     split_text = message.text.split(None, 1)
 
@@ -113,11 +111,7 @@ def extract_unt_fedban(
     text = ""
 
     entities = list(message.parse_entities([MessageEntity.TEXT_MENTION]))
-    if len(entities) > 0:
-        ent = entities[0]
-    else:
-        ent = None
-
+    ent = entities[0] if entities else None
     # if entity offset matches (command end/text start) then all good
     if entities and ent and ent.offset == len(message.text) - len(text_to_parse):
         ent = entities[0]

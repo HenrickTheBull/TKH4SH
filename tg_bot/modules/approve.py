@@ -1,19 +1,23 @@
 import html
-from tg_bot.modules.disable import DisableAbleCommandHandler
-from tg_bot import dispatcher, SUDO_USERS
-from tg_bot.modules.helper_funcs.extraction import extract_user
-from telegram.ext import CallbackContext, CallbackQueryHandler, Filters
-import tg_bot.modules.sql.approve_sql as sql
-from tg_bot.modules.helper_funcs.chat_status import user_admin
-from tg_bot.modules.log_channel import loggable
+
 from telegram import ParseMode, InlineKeyboardMarkup, InlineKeyboardButton, Update
-from telegram.utils.helpers import mention_html
 from telegram.error import BadRequest
+from telegram.ext import CallbackContext, Filters
+from telegram.utils.helpers import mention_html
+
+import tg_bot.modules.sql.approve_sql as sql
+from tg_bot import SUDO_USERS
+from tg_bot.modules.helper_funcs.chat_status import user_admin as u_admin
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
+from tg_bot.modules.helper_funcs.extraction import extract_user
+from tg_bot.modules.log_channel import loggable
+from ..modules.helper_funcs.anonymous import user_admin, AdminPerms
 
 
+@kigcmd(command='approve', filters=Filters.chat_type.groups)
 @loggable
-@user_admin
-def approve(update, context):
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
+def approve(update: Update, context: CallbackContext):
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
@@ -42,7 +46,8 @@ def approve(update, context):
         return ""
     sql.approve(message.chat_id, user_id)
     message.reply_text(
-        f"[{member.user['first_name']}](tg://user?id={member.user['id']}) has been approved in {chat_title}! They will now be ignored by automated admin actions like locks, blocklists, and antiflood.",
+        f"[{member.user['first_name']}](tg://user?id={member.user['id']}) has been approved in {chat_title}! They "
+        f"will now be ignored by automated admin actions like locks, blocklists, and antiflood.",
         parse_mode=ParseMode.MARKDOWN,
     )
     log_message = (
@@ -54,9 +59,10 @@ def approve(update, context):
     return log_message
 
 
+@kigcmd(command='unapprove', filters=Filters.chat_type.groups)
 @loggable
-@user_admin
-def disapprove(update, context):
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
+def disapprove(update: Update, context: CallbackContext):
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
@@ -90,8 +96,9 @@ def disapprove(update, context):
     return log_message
 
 
-@user_admin
-def approved(update, context):
+@kigcmd(command='approved', filters=Filters.chat_type.groups)
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
+def approved(update: Update, _: CallbackContext):
     message = update.effective_message
     chat_title = message.chat.title
     chat = update.effective_chat
@@ -107,18 +114,20 @@ def approved(update, context):
         message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
 
-@user_admin
+@kigcmd(command='approval', filters=Filters.chat_type.groups)
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
 def approval(update, context):
     message = update.effective_message
     chat = update.effective_chat
     args = context.args
     user_id = extract_user(message, args)
-    member = chat.get_member(int(user_id))
     if not user_id:
         message.reply_text(
             "I don't know who you're talking about, you're going to need to specify a user!"
         )
         return ""
+    member = chat.get_member(int(user_id))
+
     if sql.is_approved(message.chat_id, user_id):
         message.reply_text(
             f"{member.user['first_name']} is an approved user. Locks, antiflood, and blocklists won't apply to them."
@@ -129,8 +138,8 @@ def approval(update, context):
         )
 
 
-
-def unapproveall(update: Update, context: CallbackContext):
+@kigcmd(command='unapproveall', filters=Filters.chat_type.groups)
+def unapproveall(update: Update, _: CallbackContext):
     chat = update.effective_chat
     user = update.effective_user
     member = chat.get_member(user.id)
@@ -156,17 +165,16 @@ def unapproveall(update: Update, context: CallbackContext):
         )
 
 
-def unapproveall_btn(update: Update, context: CallbackContext):
+@kigcallback(pattern=r"unapproveall_.*")
+def unapproveall_btn(update: Update, _: CallbackContext):
     query = update.callback_query
     chat = update.effective_chat
     message = update.effective_message
     member = chat.get_member(query.from_user.id)
     if query.data == "unapproveall_user":
         if member.status == "creator" or query.from_user.id in SUDO_USERS:
-            users = []
             approved_users = sql.list_approved(chat.id)
-            for i in approved_users:
-                users.append(int(i.user_id))
+            users = [int(i.user_id) for i in approved_users]
             for user_id in users:
                 sql.disapprove(chat.id, user_id)
 
@@ -185,26 +193,12 @@ def unapproveall_btn(update: Update, context: CallbackContext):
         if member.status == "member":
             query.answer("You need to be admin to do this.")
 
+
 from tg_bot.modules.language import gs
+
 
 def get_help(chat):
     return gs(chat, "approve_help")
 
-APPROVE = DisableAbleCommandHandler("approve", approve, run_async=True, filters=Filters.chat_type.groups)
-DISAPPROVE = DisableAbleCommandHandler("unapprove", disapprove, run_async=True, filters=Filters.chat_type.groups)
-APPROVED = DisableAbleCommandHandler("approved", approved, run_async=True, filters=Filters.chat_type.groups)
-APPROVAL = DisableAbleCommandHandler("approval", approval, run_async=True, filters=Filters.chat_type.groups)
-UNAPPROVEALL = DisableAbleCommandHandler("unapproveall", unapproveall, run_async=True, filters=Filters.chat_type.groups)
-UNAPPROVEALL_BTN = CallbackQueryHandler(
-    unapproveall_btn, pattern=r"unapproveall_.*")
-
-dispatcher.add_handler(APPROVE)
-dispatcher.add_handler(DISAPPROVE)
-dispatcher.add_handler(APPROVED)
-dispatcher.add_handler(APPROVAL)
-dispatcher.add_handler(UNAPPROVEALL)
-dispatcher.add_handler(UNAPPROVEALL_BTN)
 
 __mod_name__ = "Approvals"
-__command_list__ = ["approve", "unapprove", "approved", "approval"]
-__handlers__ = [APPROVE, DISAPPROVE, APPROVED, APPROVAL]

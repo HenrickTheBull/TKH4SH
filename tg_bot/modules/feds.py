@@ -6,10 +6,12 @@ import json
 import time
 import csv
 import os
-
+import ast
+from telegram.ext import CallbackContext
 from telegram.error import BadRequest, TelegramError, Unauthorized
 from telegram import (
     ParseMode,
+    Update,
     Chat,
     User,
     MessageEntity,
@@ -17,7 +19,6 @@ from telegram import (
     InlineKeyboardButton,
     ChatAction,
 )
-from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram.utils.helpers import mention_html, mention_markdown
 
 from tg_bot import (
@@ -35,7 +36,6 @@ from tg_bot.modules.helper_funcs.extraction import (
     extract_user_fban,
 )
 from tg_bot.modules.helper_funcs.string_handling import markdown_parser
-from tg_bot.modules.disable import DisableAbleCommandHandler
 
 import tg_bot.modules.sql.feds_sql as sql
 
@@ -44,8 +44,9 @@ from tg_bot.modules.helper_funcs.alternate import (
     typing_action,
     send_action,
 )
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
-# Hello bot owner, I spended for feds many hours of my life, Please don't remove this if you still respect MrYacha and peaktogoo and AyraHikari too
+# Hello bot owner, I spent many hours of my life for feds, Please don't remove this if you still respect MrYacha and peaktogoo and AyraHikari too
 # Federation by MrYacha 2018-2019
 # Federation rework by Mizukito Akito 2019
 # Federation update v2 by Ayra Hikari 2019
@@ -56,7 +57,7 @@ from tg_bot.modules.helper_funcs.alternate import (
 #
 # Total spended for making this features is 68+ hours
 
-# log.info("Original federation module by MrYacha, reworked by Mizukito Akito (@peaktogoo) on Telegram.")
+log.info("Original federation module by MrYacha, reworked by Mizukito Akito (@peaktogoo) on Telegram.")
 
 # TODO: Fix Loads of code duplication
 
@@ -89,6 +90,7 @@ UNFBAN_ERRORS = {
 
 
 @typing_action
+@kigcmd(command='newfed')
 def new_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -112,7 +114,7 @@ def new_fed(update, context):
         x = sql.new_fed(user.id, fed_name, fed_id)
         if not x:
             update.effective_message.reply_text(
-                "Can't federate! Report in @GASoftware if the problem persists."
+                "Can't federate! Report in @YorkTownEagleUnion if the problem persists."
             )
             return
 
@@ -141,6 +143,7 @@ def new_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='delfed', pass_args=True)
 def del_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -188,12 +191,13 @@ def del_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='chatfed', pass_args=True)
 def fed_chat(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     fed_id = sql.get_fed_id(chat.id)
 
     user_id = update.effective_message.from_user.id
-    if not is_user_admin(update.effective_chat, user_id):
+    if not is_user_admin(update, user_id):
         update.effective_message.reply_text(
             "You must be an admin to execute this command"
         )
@@ -213,6 +217,7 @@ def fed_chat(update, context):
 
 
 @typing_action
+@kigcmd(command='joinfed', pass_args=True)
 def join_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -259,7 +264,7 @@ def join_fed(update, context):
 
         get_fedlog = sql.get_fed_log(args[0])
         if get_fedlog:
-            if eval(get_fedlog):
+            if ast.literal_eval(get_fedlog):
                 context.bot.send_message(
                     get_fedlog,
                     "Chat *{}* has joined the federation *{}*".format(
@@ -274,6 +279,7 @@ def join_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='leavefed')
 def leave_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -294,7 +300,7 @@ def leave_fed(update, context):
         if sql.chat_leave_fed(chat.id) is True:
             get_fedlog = sql.get_fed_log(fed_id)
             if get_fedlog:
-                if eval(get_fedlog):
+                if ast.literal_eval(get_fedlog):
                     context.bot.send_message(
                         get_fedlog,
                         "Chat *{}* has left the federation *{}*".format(
@@ -315,6 +321,7 @@ def leave_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='fpromote', pass_args=True)
 def user_join_fed(update, context):
     chat = update.effective_chat
     user = update.effective_user
@@ -352,7 +359,7 @@ def user_join_fed(update, context):
         getuser = sql.search_user_in_fed(fed_id, user_id)
         fed_id = sql.get_fed_id(chat.id)
         info = sql.get_fed_info(fed_id)
-        get_owner = eval(info["fusers"])["owner"]
+        get_owner = ast.literal_eval(info["fusers"])["owner"]
         get_owner = context.bot.get_chat(get_owner).id
         if user_id == get_owner:
             update.effective_message.reply_text(
@@ -379,6 +386,7 @@ def user_join_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='fdemote', pass_args=True)
 def user_demote_fed(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -439,13 +447,13 @@ def user_demote_fed(update, context):
 
 
 @typing_action
+@kigcmd(command='fedinfo', pass_args=True)
 def fed_info(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     args = context.args
     if args:
         fed_id = args[0]
-        info = sql.get_fed_info(fed_id)
     else:
         fed_id = sql.get_fed_id(chat.id)
         if not fed_id:
@@ -454,8 +462,7 @@ def fed_info(update, context):
                 "This group is not in any federation!",
             )
             return
-        info = sql.get_fed_info(fed_id)
-
+    info = sql.get_fed_info(fed_id)
     if is_user_fed_admin(fed_id, user.id) is False:
         update.effective_message.reply_text("Only a federation admin can do this!")
         return
@@ -489,6 +496,7 @@ def fed_info(update, context):
 
 
 @typing_action
+@kigcmd(command='fedadmins', pass_args=True)
 def fed_admin(update, context):
 
     chat = update.effective_chat  # type: Optional[Chat]
@@ -521,8 +529,8 @@ def fed_admin(update, context):
     owner = context.bot.get_chat(info["owner"])
     try:
         owner_name = owner.first_name + " " + owner.last_name
-    except:
-        owner_name = owner.first_name
+    except BaseException:
+        owner_name = owner.first_name or 'Deleted'
     text += " • {}\n".format(mention_html(owner.id, owner_name))
 
     members = sql.all_fed_members(fed_id)
@@ -532,13 +540,15 @@ def fed_admin(update, context):
         text += "\n🔱 Admin:\n"
         for x in members:
             user = context.bot.get_chat(x)
+            name = user.first_name or 'Deleted'
             text += " • {}\n".format(mention_html(user.id, user.first_name))
 
     update.effective_message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 @typing_action
-def fed_ban(update, context):
+@kigcmd(command=['fban', 'fedban'], pass_args=True)
+def fed_ban(update, context):  # sourcery no-metrics
 
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -684,11 +694,13 @@ def fed_ban(update, context):
                 "\n<b>Federation Admin:</b> {}"
                 "\n<b>User:</b> {}"
                 "\n<b>User ID:</b> <code>{}</code>"
+		"\n<b>Initiated From:</b> <code>{}</code>"
                 "\n<b>Reason:</b> {}".format(
                     fed_name,
                     mention_html(user.id, user.first_name),
                     user_target,
                     fban_user_id,
+		    message.chat.title,
                     reason,
                 ),
                 parse_mode="HTML",
@@ -704,11 +716,13 @@ def fed_ban(update, context):
                     "\n<b>Federation Admin:</b> {}"
                     "\n<b>User:</b> {}"
                     "\n<b>User ID:</b> <code>{}</code>"
+		    "\n<b>Initiated From:</b> <code>{}</code>"
                     "\n<b>Reason:</b> {}".format(
                         fed_name,
                         mention_html(user.id, user.first_name),
                         user_target,
                         fban_user_id,
+			message.chat.title,
                         reason,
                     ),
                     parse_mode="HTML",
@@ -840,11 +854,13 @@ def fed_ban(update, context):
             "\n<b>Federation Admin:</b> {}"
             "\n<b>User:</b> {}"
             "\n<b>User ID:</b> <code>{}</code>"
+	    "\n<b>Initiated From:</b> <code>{}</code>"
             "\n<b>Reason:</b> {}".format(
                 fed_name,
                 mention_html(user.id, user.first_name),
                 user_target,
                 fban_user_id,
+		message.chat.title,
                 reason,
             ),
             parse_mode="HTML",
@@ -860,11 +876,13 @@ def fed_ban(update, context):
                 "\n<b>Federation Admin:</b> {}"
                 "\n<b>User:</b> {}"
                 "\n<b>User ID:</b> <code>{}</code>"
+		"\n<b>Initiated From:</b> <code>{}</code>"
                 "\n<b>Reason:</b> {}".format(
                     fed_name,
                     mention_html(user.id, user.first_name),
                     user_target,
                     fban_user_id,
+		    message.chat.title,
                     reason,
                 ),
                 parse_mode="HTML",
@@ -948,6 +966,7 @@ def fed_ban(update, context):
 
 
 @typing_action
+@kigcmd(command=['unfban', 'rmfedban'], pass_args=True)
 def unfban(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1043,11 +1062,13 @@ def unfban(update, context):
             "\n<b>Federation:</b> {}"
             "\n<b>Federation Admin:</b> {}"
             "\n<b>User:</b> {}"
-            "\n<b>User ID:</b> <code>{}</code>".format(
+            "\n<b>User ID:</b> <code>{}</code>"
+	    "\n<b>Initiated From:</b> <code>{}</code>".format(
                 info["fname"],
                 mention_html(user.id, user.first_name),
                 user_target,
                 fban_user_id,
+		message.chat.title,
             ),
             parse_mode="HTML",
         )
@@ -1061,11 +1082,13 @@ def unfban(update, context):
                 "\n<b>Federation:</b> {}"
                 "\n<b>Federation Admin:</b> {}"
                 "\n<b>User:</b> {}"
-                "\n<b>User ID:</b> <code>{}</code>".format(
+                "\n<b>User ID:</b> <code>{}</code>"
+		"\n<b>Initiated From:</b> <code>{}</code>".format(
                     info["fname"],
                     mention_html(user.id, user.first_name),
                     user_target,
                     fban_user_id,
+		    message.chat.title,
                 ),
                 parse_mode="HTML",
             )
@@ -1213,7 +1236,7 @@ def set_frules(update, context):
         getfed = sql.get_fed_info(fed_id)
         get_fedlog = sql.get_fed_log(fed_id)
         if get_fedlog:
-            if eval(get_fedlog):
+            if ast.literal_eval(get_fedlog):
                 context.bot.send_message(
                     get_fedlog,
                     "*{}* has changed federation rules for fed *{}*".format(
@@ -1227,6 +1250,7 @@ def set_frules(update, context):
 
 
 @typing_action
+@kigcmd(command='frules', pass_args=True)
 def get_frules(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     args = context.args
@@ -1250,6 +1274,7 @@ def get_frules(update, context):
 
 
 @typing_action
+@kigcmd(command='fbroadcast', pass_args=True)
 def fed_broadcast(update, context):
     msg = update.effective_message  # type: Optional[Message]
     user = update.effective_user  # type: Optional[User]
@@ -1309,7 +1334,8 @@ def fed_broadcast(update, context):
 
 
 @send_action(ChatAction.UPLOAD_DOCUMENT)
-def fed_ban_list(update, context):
+@kigcmd(command='fbanlist', pass_args=True, pass_chat_data=True)
+def fed_ban_list(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     args = context.args
@@ -1365,9 +1391,8 @@ def fed_ban_list(update, context):
                 else:
                     if user.id not in SUDO_USERS:
                         put_chat(chat.id, new_jam, chat_data)
-            else:
-                if user.id not in SUDO_USERS:
-                    put_chat(chat.id, new_jam, chat_data)
+            elif user.id not in SUDO_USERS:
+                put_chat(chat.id, new_jam, chat_data)
             backups = ""
             for users in getfban:
                 getuserinfo = sql.get_all_fban_users_target(fed_id, users)
@@ -1409,9 +1434,8 @@ def fed_ban_list(update, context):
                 else:
                     if user.id not in SUDO_USERS:
                         put_chat(chat.id, new_jam, chat_data)
-            else:
-                if user.id not in SUDO_USERS:
-                    put_chat(chat.id, new_jam, chat_data)
+            elif user.id not in SUDO_USERS:
+                put_chat(chat.id, new_jam, chat_data)
             backups = "id,firstname,lastname,username,reason\n"
             for users in getfban:
                 getuserinfo = sql.get_all_fban_users_target(fed_id, users)
@@ -1474,9 +1498,8 @@ def fed_ban_list(update, context):
             else:
                 if user.id not in SUDO_USERS:
                     put_chat(chat.id, new_jam, chat_data)
-        else:
-            if user.id not in SUDO_USERS:
-                put_chat(chat.id, new_jam, chat_data)
+        elif user.id not in SUDO_USERS:
+            put_chat(chat.id, new_jam, chat_data)
         cleanr = re.compile("<.*?>")
         cleantext = re.sub(cleanr, "", text)
         with BytesIO(str.encode(cleantext)) as output:
@@ -1491,6 +1514,7 @@ def fed_ban_list(update, context):
 
 
 @typing_action
+@kigcmd(command='fednotif', pass_args=True)
 def fed_notif(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1526,6 +1550,7 @@ def fed_notif(update, context):
 
 
 @typing_action
+@kigcmd(command='fedchats', pass_args=True)
 def fed_chats(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1590,7 +1615,8 @@ def fed_chats(update, context):
 
 
 @typing_action
-def fed_import_bans(update, context):
+@kigcmd(command='importfbans', pass_args=True, pass_chat_data=True)
+def fed_import_bans(update, context):  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
@@ -1722,7 +1748,7 @@ def fed_import_bans(update, context):
                 text += " {} Failed to import.".format(failed)
             get_fedlog = sql.get_fed_log(fed_id)
             if get_fedlog:
-                if eval(get_fedlog):
+                if ast.literal_eval(get_fedlog):
                     teks = "Fed *{}* has successfully imported data. {} banned.".format(
                         getfed["fname"], success
                     )
@@ -1798,7 +1824,7 @@ def fed_import_bans(update, context):
                 text += " {} Failed to import.".format(failed)
             get_fedlog = sql.get_fed_log(fed_id)
             if get_fedlog:
-                if eval(get_fedlog):
+                if ast.literal_eval(get_fedlog):
                     teks = "Fed *{}* has successfully imported data. {} banned.".format(
                         getfed["fname"], success
                     )
@@ -1811,6 +1837,7 @@ def fed_import_bans(update, context):
         send_message(update.effective_message, text)
 
 
+@kigcallback(pattern=r"rmfed_")
 def del_fed_button(update, context):
     query = update.callback_query
     fed_id = query.data.split("_")[1]
@@ -1832,7 +1859,8 @@ def del_fed_button(update, context):
 
 
 @typing_action
-def fed_stat_user(update, context):
+@kigcmd(command='fbanstat', pass_args=True)
+def fed_stat_user(update, context):  # sourcery no-metrics
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
     args = context.args
@@ -1940,6 +1968,7 @@ def fed_stat_user(update, context):
 
 
 @typing_action
+@kigcmd(command='setfedlog', pass_args=True)
 def set_fed_log(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -1981,6 +2010,7 @@ def set_fed_log(update, context):
 
 
 @typing_action
+@kigcmd(command='unsetfedlog', pass_args=True)
 def unset_fed_log(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2023,6 +2053,7 @@ def unset_fed_log(update, context):
 
 
 @typing_action
+@kigcmd('subfed', pass_args=True)
 def subs_feds(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2089,6 +2120,7 @@ def subs_feds(update, context):
 
 
 @typing_action
+@kigcmd(command='unsubfed', pass_args=True)
 def unsubs_feds(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2155,6 +2187,7 @@ def unsubs_feds(update, context):
 
 
 @typing_action
+@kigcmd(command='fedsubs', pass_args=True)
 def get_myfedsubs(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2203,6 +2236,7 @@ def get_myfedsubs(update, context):
 
 
 @typing_action
+@kigcmd(command='myfeds', pass_args=True)
 def get_myfeds_list(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
@@ -2233,7 +2267,7 @@ def is_user_fed_owner(fed_id, user_id):
     getsql = sql.get_fed_info(fed_id)
     if getsql is False:
         return False
-    getfedowner = eval(getsql["fusers"])
+    getfedowner = ast.literal_eval(getsql["fusers"])
     if getfedowner == None or getfedowner == False:
         return False
     getfedowner = getfedowner["owner"]
@@ -2320,71 +2354,57 @@ __mod_name__ = "Federations"
 
 from tg_bot.modules.language import gs
 
+def fed_owner_help(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(
+        gs(update.effective_chat.id, "FED_OWNER_HELP"),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+def fed_admin_help(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(
+        gs(update.effective_chat.id, "FED_ADMIN_HELP"),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+
+def fed_user_help(update: Update, context: CallbackContext):
+    update.effective_message.reply_text(
+        gs(update.effective_chat.id, "FED_USER_HELP"),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+@kigcallback(pattern=r"fed_help_")
+def fed_help(update: Update, context: CallbackContext):
+    query = update.callback_query
+    bot = context.bot
+    help_info = query.data.split("fed_help_")[1]
+    if help_info == "owner":
+        help_text = gs(update.effective_chat.id, "FED_OWNER_HELP")
+    elif help_info == "admin":
+        help_text = gs(update.effective_chat.id, "FED_ADMIN_HELP")
+    elif help_info == "user":
+        help_text = gs(update.effective_chat.id, "FED_USER_HELP") 
+    query.message.edit_text(
+        text=help_text,
+        parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(text="Back", callback_data=f"help_module({__mod_name__.lower()})"),
+            InlineKeyboardButton(text='Report Error', url='https://t.me/YorkTownEagleUnion')]]
+        ),
+    )
+    bot.answer_callback_query(query.id)
+
+
 def get_help(chat):
-    return gs(chat, "feds_help")
-
-NEW_FED_HANDLER = CommandHandler("newfed", new_fed)
-DEL_FED_HANDLER = CommandHandler("delfed", del_fed, pass_args=True)
-JOIN_FED_HANDLER = CommandHandler("joinfed", join_fed, pass_args=True)
-LEAVE_FED_HANDLER = CommandHandler("leavefed", leave_fed, pass_args=True)
-PROMOTE_FED_HANDLER = CommandHandler("fpromote", user_join_fed, pass_args=True)
-DEMOTE_FED_HANDLER = CommandHandler("fdemote", user_demote_fed, pass_args=True)
-INFO_FED_HANDLER = CommandHandler("fedinfo", fed_info, pass_args=True)
-BAN_FED_HANDLER = DisableAbleCommandHandler(["fban", "fedban"], fed_ban, pass_args=True)
-UN_BAN_FED_HANDLER = CommandHandler("unfban", unfban, pass_args=True)
-FED_BROADCAST_HANDLER = CommandHandler("fbroadcast", fed_broadcast, pass_args=True)
-FED_SET_RULES_HANDLER = CommandHandler("setfrules", set_frules, pass_args=True)
-FED_GET_RULES_HANDLER = CommandHandler("frules", get_frules, pass_args=True)
-FED_CHAT_HANDLER = CommandHandler("chatfed", fed_chat, pass_args=True)
-FED_ADMIN_HANDLER = CommandHandler("fedadmins", fed_admin, pass_args=True)
-FED_USERBAN_HANDLER = CommandHandler(
-    "fbanlist", fed_ban_list, pass_args=True, pass_chat_data=True
-)
-FED_NOTIF_HANDLER = CommandHandler("fednotif", fed_notif, pass_args=True)
-FED_CHATLIST_HANDLER = CommandHandler("fedchats", fed_chats, pass_args=True)
-# FED_IMPORTBAN_HANDLER = CommandHandler( "importfbans", fed_import_bans, pass_chat_data=True)
-FEDSTAT_USER = DisableAbleCommandHandler(
-    ["fedstat", "fbanstat"], fed_stat_user, pass_args=True
-)
-SET_FED_LOG = CommandHandler("setfedlog", set_fed_log, pass_args=True)
-UNSET_FED_LOG = CommandHandler("unsetfedlog", unset_fed_log, pass_args=True)
-SUBS_FED = CommandHandler("subfed", subs_feds, pass_args=True)
-UNSUBS_FED = CommandHandler("unsubfed", unsubs_feds, pass_args=True)
-MY_SUB_FED = CommandHandler("fedsubs", get_myfedsubs, pass_args=True)
-MY_FEDS_LIST = CommandHandler("myfeds", get_myfeds_list)
-
-DELETEBTN_FED_HANDLER = CallbackQueryHandler(
-    del_fed_button, pattern=r"rmfed_", run_async=True
-)
-
-dispatcher.add_handler(NEW_FED_HANDLER)
-dispatcher.add_handler(DEL_FED_HANDLER)
-dispatcher.add_handler(JOIN_FED_HANDLER)
-dispatcher.add_handler(LEAVE_FED_HANDLER)
-dispatcher.add_handler(PROMOTE_FED_HANDLER)
-dispatcher.add_handler(DEMOTE_FED_HANDLER)
-dispatcher.add_handler(INFO_FED_HANDLER)
-dispatcher.add_handler(BAN_FED_HANDLER)
-dispatcher.add_handler(UN_BAN_FED_HANDLER)
-dispatcher.add_handler(FED_BROADCAST_HANDLER)
-dispatcher.add_handler(FED_SET_RULES_HANDLER)
-dispatcher.add_handler(FED_GET_RULES_HANDLER)
-dispatcher.add_handler(FED_CHAT_HANDLER)
-dispatcher.add_handler(FED_ADMIN_HANDLER)
-dispatcher.add_handler(FED_USERBAN_HANDLER)
-dispatcher.add_handler(FED_NOTIF_HANDLER)
-dispatcher.add_handler(FED_CHATLIST_HANDLER)
-# dispatcher.add_handler(FED_IMPORTBAN_HANDLER)
-dispatcher.add_handler(FEDSTAT_USER)
-dispatcher.add_handler(SET_FED_LOG)
-dispatcher.add_handler(UNSET_FED_LOG)
-dispatcher.add_handler(SUBS_FED)
-dispatcher.add_handler(UNSUBS_FED)
-dispatcher.add_handler(MY_SUB_FED)
-dispatcher.add_handler(MY_FEDS_LIST)
-
-dispatcher.add_handler(DELETEBTN_FED_HANDLER)
-
-dispatcher.add_handler(MY_FEDS_LIST)
-
-dispatcher.add_handler(DELETEBTN_FED_HANDLER)
+    return [gs(chat, "feds_help"),
+    [
+        InlineKeyboardButton(text="Fedadmins", callback_data="fed_help_admin"),
+        InlineKeyboardButton(text="Fedowners", callback_data="fed_help_owner")
+    ],
+    [
+        InlineKeyboardButton(text="Users", callback_data="fed_help_user")
+    ],
+]

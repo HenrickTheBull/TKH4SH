@@ -1,13 +1,13 @@
+import contextlib
 import html
-import re, os
 import time
-from typing import List
-
+import git
 import requests
-from telegram import Update, MessageEntity, ParseMode
+from io import BytesIO
+from telegram import Chat, Update, MessageEntity, ParseMode, User
 from telegram.error import BadRequest
-from telegram.ext import CommandHandler, Filters, CallbackContext
-from telegram.utils.helpers import mention_html
+from telegram.ext import Filters, CallbackContext
+from telegram.utils.helpers import mention_html, escape_markdown
 from subprocess import Popen, PIPE
 
 from tg_bot import (
@@ -20,21 +20,21 @@ from tg_bot import (
     WHITELIST_USERS,
     INFOPIC,
     sw,
+    StartTime
 )
 from tg_bot.__main__ import STATS, USER_INFO, TOKEN
-from tg_bot.modules.disable import DisableAbleCommandHandler
+from tg_bot.modules.sql import SESSION
 from tg_bot.modules.helper_funcs.chat_status import user_admin, sudo_plus
 from tg_bot.modules.helper_funcs.extraction import extract_user
 import tg_bot.modules.sql.users_sql as sql
+from tg_bot.modules.users import __user_info__ as chat_count
 from tg_bot.modules.language import gs
-from telegram import __version__
+from telegram import __version__ as ptbver, InlineKeyboardMarkup, InlineKeyboardButton
 from psutil import cpu_percent, virtual_memory, disk_usage, boot_time
 import datetime
 import platform
 from platform import python_version
-from spamprotection.sync import SPBClient
-from spamprotection.errors import HostDownError
-client = SPBClient()
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback
 
 MARKDOWN_HELP = f"""
 Markdown is a very powerful formatting tool supported by telegram. {dispatcher.bot.first_name} has some enhancements, to make sure that \
@@ -60,16 +60,13 @@ This will create two buttons on a single line, instead of one button per line.
 Keep in mind that your message <b>MUST</b> contain some text other than just a button!
 """
 
-
+@kigcmd(command='id', pass_args=True)
 def get_id(update: Update, context: CallbackContext):
     bot, args = context.bot, context.args
     message = update.effective_message
     chat = update.effective_chat
     msg = update.effective_message
-    user_id = extract_user(msg, args)
-
-    if user_id:
-
+    if user_id := extract_user(msg, args):
         if msg.reply_to_message and msg.reply_to_message.forward_from:
 
             user1 = message.reply_to_message.from_user
@@ -90,19 +87,17 @@ def get_id(update: Update, context: CallbackContext):
                 parse_mode=ParseMode.HTML,
             )
 
+    elif chat.type == "private":
+        msg.reply_text(
+            f"Your id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
+        )
+
     else:
+        msg.reply_text(
+            f"This group's id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
+        )
 
-        if chat.type == "private":
-            msg.reply_text(
-                f"Your id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
-            )
-
-        else:
-            msg.reply_text(
-                f"This group's id is <code>{chat.id}</code>.", parse_mode=ParseMode.HTML
-            )
-
-
+@kigcmd(command='gifid')
 def gifid(update: Update, _):
     msg = update.effective_message
     if msg.reply_to_message and msg.reply_to_message.animation:
@@ -113,26 +108,28 @@ def gifid(update: Update, _):
     else:
         update.effective_message.reply_text("Please reply to a gif to get its ID.")
 
-
-def info(update: Update, context: CallbackContext):
+@kigcmd(command='info', pass_args=True)
+def info(update: Update, context: CallbackContext):  # sourcery no-metrics
     bot = context.bot
     args = context.args
     message = update.effective_message
     chat = update.effective_chat
-    user_id = extract_user(update.effective_message, args)
-
-    if user_id:
+    if user_id := extract_user(update.effective_message, args):
         user = bot.get_chat(user_id)
 
     elif not message.reply_to_message and not args:
-        user = message.from_user
+        user = (
+            message.sender_chat
+            if message.sender_chat is not None
+            else message.from_user
+        )
 
     elif not message.reply_to_message and (
         not args
         or (
             len(args) >= 1
             and not args[0].startswith("@")
-            and not args[0].isdigit()
+            and not args[0].lstrip("-").isdigit()
             and not message.parse_entities([MessageEntity.TEXT_MENTION])
         )
     ):
@@ -142,107 +139,106 @@ def info(update: Update, context: CallbackContext):
     else:
         return
 
+    if hasattr(user, 'type') and user.type != "private":
+        text = get_chat_info(user)
+        is_chat = True
+    else:
+        text = get_user_info(chat, user)
+        is_chat = False
+
+    if INFOPIC:
+        if is_chat:
+            try:
+                pic = user.photo.big_file_id
+                pfp = bot.get_file(pic).download(out=BytesIO())
+                pfp.seek(0)
+                message.reply_document(
+                        document=pfp,
+                        filename=f'{user.id}.jpg',
+                        caption=text,
+                        parse_mode=ParseMode.HTML,
+                )
+            except AttributeError:  # AttributeError means no chat pic so just send text
+                message.reply_text(
+                        text,
+                        parse_mode=ParseMode.HTML,
+                        disable_web_page_preview=True,
+                )
+        else:
+            try:
+                profile = bot.get_user_profile_photos(user.id).photos[0][-1]
+                _file = bot.get_file(profile["file_id"])
+
+                _file = _file.download(out=BytesIO())
+                _file.seek(0)
+
+                message.reply_document(
+                        document=_file,
+                        caption=(text),
+                        parse_mode=ParseMode.HTML,
+                )
+
+            # Incase user don't have profile pic, send normal text
+            except IndexError:
+                message.reply_text(
+                        text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
+                )
+
+    else:
+        message.reply_text(
+            text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
+        )
+
+
+def get_user_info(chat: Chat, user: User) -> str:
+    bot = dispatcher.bot
     text = (
         f"<b>General:</b>\n"
         f"ID: <code>{user.id}</code>\n"
         f"First Name: {html.escape(user.first_name)}"
     )
-
     if user.last_name:
         text += f"\nLast Name: {html.escape(user.last_name)}"
-
     if user.username:
         text += f"\nUsername: @{html.escape(user.username)}"
-
     text += f"\nPermanent user link: {mention_html(user.id, 'link')}"
-
-    try:
-        spamwtc = sw.get_ban(int(user.id))
-        if spamwtc:
+    with contextlib.suppress(Exception):
+        if spamwtc := sw.get_ban(int(user.id)):
             text += "<b>\n\nSpamWatch:\n</b>"
             text += "<b>This person is banned in Spamwatch!</b>"
             text += f"\nReason: <pre>{spamwtc.reason}</pre>"
             text += "\nAppeal at @SpamWatchSupport"
         else:
             text += "<b>\n\nSpamWatch:</b>\n Not banned"
-    except:
-        pass  # don't crash if api is down somehow...
-
-    apst = requests.get(f'https://api.intellivoid.net/spamprotection/v1/lookup?query={context.bot.username}')
-    api_status = apst.status_code
-    if (api_status == 200):
-        try:
-            status = client.raw_output(int(user.id))
-            ptid = status["results"]["private_telegram_id"]
-            op = status["results"]["attributes"]["is_operator"]
-            ag = status["results"]["attributes"]["is_agent"]
-            wl = status["results"]["attributes"]["is_whitelisted"]
-            ps = status["results"]["attributes"]["is_potential_spammer"]
-            sp = status["results"]["spam_prediction"]["spam_prediction"]
-            hamp = status["results"]["spam_prediction"]["ham_prediction"]
-            blc = status["results"]["attributes"]["is_blacklisted"]
-            if blc:
-                blres = status["results"]["attributes"]["blacklist_reason"]
-            else:
-                blres = None
-            text += "\n\n<b>SpamProtection:</b>"
-            text += f"<b>\nPrivate Telegram ID:</b> <code>{ptid}</code>\n"
-            text += f"<b>Operator:</b> <code>{op}</code>\n"
-            text += f"<b>Agent:</b> <code>{ag}</code>\n"
-            text += f"<b>Whitelisted:</b> <code>{wl}</code>\n"
-            text += f"<b>Spam Prediction:</b> <code>{sp}</code>\n"
-            text += f"<b>Ham Prediction:</b> <code>{hamp}</code>\n"
-            text += f"<b>Potential Spammer:</b> <code>{ps}</code>\n"
-            text += f"<b>Blacklisted:</b> <code>{blc}</code>\n"
-            text += f"<b>Blacklist Reason:</b> <code>{blres}</code>\n"
-        except HostDownError:
-            text += "\n\n<b>SpamProtection:</b>"
-            text += "\nCan't connect to Intellivoid SpamProtection API\n"
-    else:
-        text += "\n\n<b>SpamProtection:</b>"
-        text += f"\n<code>API RETURNED: {api_status}</code>\n"
-
     Nation_level_present = False
-
     num_chats = sql.get_user_num_chats(user.id)
-    text += f"\nChat count: <code>{num_chats}</code>"
-
-    try:
+    text += f"\n<b>Chat count</b>: <code>{num_chats}</code>"
+    with contextlib.suppress(BadRequest):
         user_member = chat.get_member(user.id)
         if user_member.status == "administrator":
-            result = requests.post(
-                f"https://api.telegram.org/bot{TOKEN}/getChatMember?chat_id={chat.id}&user_id={user.id}"
-            )
-            result = result.json()["result"]
-            if "custom_title" in result.keys():
-                custom_title = result["custom_title"]
-                text += f"\nThis user holds the title <b>{custom_title}</b> here."
-    except BadRequest:
-        pass
-
-
+            result = bot.get_chat_member(chat.id, user.id)
+            if result.custom_title:
+                text += f"\nThis user holds the title <b>{result.custom_title}</b> here."
     if user.id == OWNER_ID:
-        text += f"\nThis person is my owner"
+        text += '\nThis person is my owner'
         Nation_level_present = True
     elif user.id in DEV_USERS:
-        text += f"\nThis Person is a part of Eagle Union"
+        text += '\nThis Person is a part of Eagle Union'
         Nation_level_present = True
     elif user.id in SUDO_USERS:
-        text += f"\nThe Nation level of this person is Royal"
+        text += '\nThe Nation level of this person is Royal'
         Nation_level_present = True
     elif user.id in SUPPORT_USERS:
-        text += f"\nThe Nation level of this person is Sakura"
+        text += '\nThe Nation level of this person is Sakura'
         Nation_level_present = True
     elif user.id in SARDEGNA_USERS:
-        text += f"\nThe Nation level of this person is Sardegna"
+        text += '\nThe Nation level of this person is Sardegna'
         Nation_level_present = True
     elif user.id in WHITELIST_USERS:
-        text += f"\nThe Nation level of this person is Neptunia"
+        text += '\nThe Nation level of this person is Neptunia'
         Nation_level_present = True
-
     if Nation_level_present:
-        text += ' [<a href="https://t.me/{}?start=nations">?</a>]'.format(bot.username)
-
+        text += f' [<a href="https://t.me/{bot.username}?start=nations">?</a>]'
     text += "\n"
     for mod in USER_INFO:
         if mod.__mod_name__ == "Users":
@@ -254,32 +250,24 @@ def info(update: Update, context: CallbackContext):
             mod_info = mod.__user_info__(user.id, chat.id)
         if mod_info:
             text += "\n" + mod_info
-
-    if INFOPIC:
-        try:
-            profile = bot.get_user_profile_photos(user.id).photos[0][-1]
-            _file = bot.get_file(profile["file_id"])
-            _file.download(f"{user.id}.png")
-
-            message.reply_document(
-                document=open(f"{user.id}.png", "rb"),
-                caption=(text),
-                parse_mode=ParseMode.HTML,
-            )
-
-            os.remove(f"{user.id}.png")
-        # Incase user don't have profile pic, send normal text
-        except IndexError:
-            message.reply_text(
-                text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
-            )
-
-    else:
-        message.reply_text(
-            text, parse_mode=ParseMode.HTML, disable_web_page_preview=True
-        )
+    return text
 
 
+def get_chat_info(user):
+    text = (
+        f"<b>Chat Info:</b>\n"
+        f"<b>Title:</b> {user.title}"
+    )
+    if user.username:
+        text += f"\n<b>Username:</b> @{html.escape(user.username)}"
+    text += f"\n<b>Chat ID:</b> <code>{user.id}</code>"
+    text += f"\n<b>Chat Type:</b> {user.type.capitalize()}"
+    text += "\n" + chat_count(user.id)
+
+    return text
+
+
+@kigcmd(command='echo', pass_args=True, filters=Filters.chat_type.groups)
 @user_admin
 def echo(update: Update, _):
     args = update.effective_message.text.split(None, 1)
@@ -298,30 +286,7 @@ def shell(command):
     stdout, stderr = process.communicate()
     return (stdout, stderr)
 
-
-@sudo_plus
-def ram(update: Update, _):
-    cmd = "ps -o pid"
-    output = shell(cmd)[0].decode()
-    processes = output.splitlines()
-    mem = 0
-    for p in processes[1:]:
-        mem += int(
-            float(
-                shell(
-                    "ps u -p {} | awk ".format(p)
-                    + "'{sum=sum+$6}; END {print sum/1024}'"
-                )[0]
-                .decode()
-                .rstrip()
-                .replace("'", "")
-            )
-        )
-    update.message.reply_text(
-        f"RAM usage = <code>{mem} MiB</code>", parse_mode=ParseMode.HTML
-    )
-
-
+@kigcmd(command='markdownhelp', filters=Filters.chat_type.private)
 def markdown_help(update: Update, _):
     chat = update.effective_chat
     update.effective_message.reply_text((gs(chat.id, "markdown_help_text")), parse_mode=ParseMode.HTML)
@@ -334,49 +299,93 @@ def markdown_help(update: Update, _):
         "[button2](buttonurl://google.com:same)"
     )
 
+def get_readable_time(seconds: int) -> str:
+    count = 0
+    ping_time = ""
+    time_list = []
+    time_suffix_list = ["s", "m", "h", "days"]
 
+    while count < 4:
+        count += 1
+        remainder, result = divmod(seconds, 60) if count < 3 else divmod(seconds, 24)
+        if seconds == 0 and remainder == 0:
+            break
+        time_list.append(int(result))
+        seconds = int(remainder)
+
+    for x in range(len(time_list)):
+        time_list[x] = str(time_list[x]) + time_suffix_list[x]
+    if len(time_list) == 4:
+        ping_time += f'{time_list.pop()}, '
+
+    time_list.reverse()
+    ping_time += ":".join(time_list)
+
+    return ping_time
+
+stats_str = '''
+'''
+@kigcmd(command='stats', can_disable=False)
 @sudo_plus
 def stats(update, context):
+    db_size = SESSION.execute("SELECT pg_size_pretty(pg_database_size(current_database()))").scalar_one_or_none()
     uptime = datetime.datetime.fromtimestamp(boot_time()).strftime("%Y-%m-%d %H:%M:%S")
-    status = "*>-------< System >-------<*\n"
-    status += "*System uptime:* " + str(uptime) + "\n"
-
+    botuptime = get_readable_time((time.time() - StartTime))
+    status = "*╒═══「 System statistics: 」*\n\n"
+    status += f"*• System Start time:* {str(uptime)}" + "\n"
     uname = platform.uname()
-    status += "*System:* " + str(uname.system) + "\n"
-    status += "*Node name:* " + str(uname.node) + "\n"
-    status += "*Release:* " + str(uname.release) + "\n"
-    status += "*Machine:* " + str(uname.machine) + "\n"
+    status += f"*• System:* {str(uname.system)}" + "\n"
+    status += f"*• Node name:* {escape_markdown(str(uname.node))}" + "\n"
+    status += f"*• Release:* {escape_markdown(str(uname.release))}" + "\n"
+    status += f"*• Machine:* {escape_markdown(str(uname.machine))}" + "\n"
 
     mem = virtual_memory()
     cpu = cpu_percent()
     disk = disk_usage("/")
-    status += "*CPU usage:* " + str(cpu) + " %\n"
-    status += "*Ram usage:* " + str(mem[2]) + " %\n"
-    status += "*Storage used:* " + str(disk[3]) + " %\n\n"
-    status += "*Python version:* " + python_version() + "\n"
-    status += "*Library version:* " + str(__version__) + "\n"
+    status += f"*• CPU:* {str(cpu)}" + " %\n"
+    status += f"*• RAM:* {str(mem[2])}" + " %\n"
+    status += f"*• Storage:* {str(disk[3])}" + " %\n\n"
+    status += f"*• Python version:* {python_version()}" + "\n"
+    status += f"*• python-telegram-bot:* {str(ptbver)}" + "\n"
+    status += f"*• Uptime:* {str(botuptime)}" + "\n"
+    status += f"*• Database size:* {str(db_size)}" + "\n"
+    kb = [
+          [
+           InlineKeyboardButton('Ping', callback_data='pingCB')
+          ]
+    ]
     try:
-        update.effective_message.reply_text(
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        status += f"*• Commit*: `{sha[:9]}`\n"
+    except Exception as e:
+        status += f"*• Commit*: `{str(e)}`\\n"
 
-            f"*Kigyo (@{context.bot.username}), *\n" +
-            "Maintained by [Dank-del](t.me/dank_as_fuck)\n" +
-            "Built with ❤️ using python-telegram-bot\n\n" + status +
+    try:
+        update.effective_message.reply_text(status +
             "\n*Bot statistics*:\n"
             + "\n".join([mod.__stats__() for mod in STATS]) +
-            "\n\n*SRC*: [GitHub](https://github.com/Dank-del/EnterpriseALRobot) | [GitLab](https://gitlab.com/Dank-del/EnterpriseALRobot)",
-        parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
+            "\n\n[⍙ GitHub](https://github.com/Dank-del/EnterpriseALRobot) | [⍚ GitLab](https://gitlab.com/Dank-del/EnterpriseALRobot)\n\n" +
+            "╘══「 by [Dank-del](github.com/Dank-del) 」\n",
+        parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb), disable_web_page_preview=True)
     except BaseException:
         update.effective_message.reply_text(
+            (
+                (
+                    (
+                        "\n*Bot statistics*:\n"
+                        + "\n".join(mod.__stats__() for mod in STATS)
+                    )
+                    + "\n\n⍙ [GitHub](https://github.com/Dank-del/EnterpriseALRobot) | ⍚ [GitLab](https://gitlab.com/Dank-del/EnterpriseALRobot)\n\n"
+                )
+                + "╘══「 by [Dank-del](github.com/Dank-del) 」\n"
+            ),
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=InlineKeyboardMarkup(kb),
+            disable_web_page_preview=True,
+        )
 
-            f"*Kigyo (@{context.bot.username}), *\n" +
-            "built by [Dank-del](t.me/dank_as_fuck)\n" +
-            "Built with ❤️ using python-telegram-bot\n" +
-            "\n*Bot statistics*:\n"
-            + "\n".join([mod.__stats__() for mod in STATS]) +
-            "\n\n*SRC*: [GitHub](https://github.com/Dank-del/EnterpriseALRobot) | [GitLab](https://gitlab.com/Dank-del/EnterpriseALRobot)",
-        parse_mode=ParseMode.MARKDOWN, disable_web_page_preview=True)
-
-
+@kigcmd(command='ping')
 def ping(update: Update, _):
     msg = update.effective_message
     start_time = time.time()
@@ -388,40 +397,19 @@ def ping(update: Update, _):
     )
 
 
+@kigcallback(pattern=r'^pingCB')
+def pingCallback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    start_time = time.time()
+    requests.get('https://api.telegram.org')
+    end_time = time.time()
+    ping_time = round((end_time - start_time) * 1000, 3)
+    query.answer(f'Pong! {ping_time}ms')
+
+
 def get_help(chat):
     return gs(chat, "misc_help")
 
 
 
-ID_HANDLER = DisableAbleCommandHandler("id", get_id, pass_args=True, run_async=True)
-GIFID_HANDLER = DisableAbleCommandHandler("gifid", gifid, run_async=True)
-INFO_HANDLER = DisableAbleCommandHandler("info", info, pass_args=True, run_async=True)
-ECHO_HANDLER = DisableAbleCommandHandler(
-    "echo", echo, filters=Filters.chat_type.groups, run_async=True
-)
-MD_HELP_HANDLER = CommandHandler(
-    "markdownhelp", markdown_help, filters=Filters.chat_type.private, run_async=True
-)
-STATS_HANDLER = CommandHandler("stats", stats, run_async=True)
-PING_HANDLER = DisableAbleCommandHandler("ping", ping, run_async=True)
-RAM_HANDLER = CommandHandler("ram", ram, run_async=True)
-dispatcher.add_handler(ID_HANDLER)
-dispatcher.add_handler(GIFID_HANDLER)
-dispatcher.add_handler(INFO_HANDLER)
-dispatcher.add_handler(ECHO_HANDLER)
-dispatcher.add_handler(MD_HELP_HANDLER)
-dispatcher.add_handler(STATS_HANDLER)
-dispatcher.add_handler(PING_HANDLER)
-dispatcher.add_handler(RAM_HANDLER)
-
 __mod_name__ = "Misc"
-__command_list__ = ["id", "info", "echo", "ping"]
-__handlers__ = [
-    ID_HANDLER,
-    GIFID_HANDLER,
-    INFO_HANDLER,
-    ECHO_HANDLER,
-    MD_HELP_HANDLER,
-    STATS_HANDLER,
-    PING_HANDLER,
-]

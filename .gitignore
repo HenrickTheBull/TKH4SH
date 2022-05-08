@@ -3,11 +3,9 @@ tg_bot/*.session
 tg_bot/*.session-journal
 tg_bot/config.ini
 *.pyc
-.idea/
 .project
 .pydevproject
 .directory
-.vscode
 tg_bot/modules/helper_funcs/temp.txt
 start-3.6.bat
 *.session
@@ -21,9 +19,7 @@ env/
 *.session-journal
 config.ini
 *.session-journal
-log.txt
+*.log
 shell_output.txt
 .vs
-tg_bot/elevated_users.json
-elevated_users.json
 tg_bot/elevated_users.json

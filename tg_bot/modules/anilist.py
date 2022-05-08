@@ -1,25 +1,21 @@
 # module to get anime info by t.me/DragSama // find him on github :  https://github.com/DragSama // he's my doraemon btw.
-from telegram.ext import CommandHandler, CallbackContext
+import bs4
+from telegram.ext import CallbackContext
 from telegram import (
-    Message,
-    Chat,
-    User,
     ParseMode,
     Update,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from tg_bot import dispatcher
-from tg_bot.modules.disable import DisableAbleCommandHandler
 import requests
 import math
 import time
-
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 def shorten(description, info="anilist.co"):
     msg = ""
     if len(description) > 700:
-        description = description[0:500] + "...."
+        description = f'{description[:500]}....'
         msg += f"\n*Description*: _{description}_[Read More]({info})"
     else:
         msg += f"\n*Description*:_{description}_"
@@ -35,17 +31,18 @@ def shorten(description, info="anilist.co"):
 def t(milliseconds: int) -> str:
     """Inputs time in milliseconds, to get beautified time,
     as string"""
-    seconds, milliseconds = divmod(int(milliseconds), 1000)
+    seconds, milliseconds = divmod(milliseconds, 1000)
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)
     tmp = (
-        ((str(days) + " Days, ") if days else "")
-        + ((str(hours) + " Hours, ") if hours else "")
-        + ((str(minutes) + " Minutes, ") if minutes else "")
-        + ((str(seconds) + " Seconds, ") if seconds else "")
-        + ((str(milliseconds) + " ms, ") if milliseconds else "")
+        (f'{str(days)} Days, ' if days else "")
+        + (f'{str(hours)} Hours, ' if hours else "")
+        + (f'{str(minutes)} Minutes, ' if minutes else "")
+        + (f'{str(seconds)} Seconds, ' if seconds else "")
+        + (f'{str(milliseconds)} ms, ' if milliseconds else "")
     )
+
     return tmp[:-2]
 
 
@@ -162,7 +159,7 @@ query ($id: Int,$search: String) {
 
 url = "https://graphql.anilist.co"
 
-
+@kigcmd(command="airing")
 def airing(update: Update, context: CallbackContext):
     message = update.effective_message
     search_str = message.text.split(" ", 1)
@@ -184,8 +181,8 @@ def airing(update: Update, context: CallbackContext):
         msg += f"\n*Episode*:{response['episodes']}\n*Status*: `N/A`"
     update.effective_message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
 
-
-def anime(update: Update, context: CallbackContext):
+@kigcmd(command="anime")
+def anime(update: Update, context: CallbackContext):  # sourcery no-metrics
     message = update.effective_message
     search = message.text.split(" ", 1)
     if len(search) == 1:
@@ -217,12 +214,9 @@ def anime(update: Update, context: CallbackContext):
             trailer_id = trailer.get("id", None)
             site = trailer.get("site", None)
             if site == "youtube":
-                trailer = "https://youtu.be/" + trailer_id
+                trailer = f"https://youtu.be/{trailer_id}"
         description = (
-            json.get("description", "N/A")
-            .replace("<i>", "")
-            .replace("</i>", "")
-            .replace("<br>", "")
+           bs4.BeautifulSoup(json.get("description", "N/A"), features='html.parser').text
         )
         msg += shorten(description, info)
         image = json.get("bannerImage", None)
@@ -243,7 +237,7 @@ def anime(update: Update, context: CallbackContext):
                     parse_mode=ParseMode.MARKDOWN,
                     reply_markup=InlineKeyboardMarkup(buttons),
                 )
-            except:
+            except Exception:
                 msg += f" [〽️]({image})"
                 update.effective_message.reply_text(
                     msg,
@@ -257,7 +251,7 @@ def anime(update: Update, context: CallbackContext):
                 reply_markup=InlineKeyboardMarkup(buttons),
             )
 
-
+@kigcmd(command="character")
 def character(update: Update, context: CallbackContext):
     message = update.effective_message
     search = message.text.split(" ", 1)
@@ -275,11 +269,10 @@ def character(update: Update, context: CallbackContext):
     if json:
         json = json["data"]["Character"]
         msg = f"*{json.get('name').get('full')}*(`{json.get('name').get('native')}`)\n"
-        description = f"{json['description']}"
+        description = bs4.BeautifulSoup(f"{json['description']}", features='html.parser').text
         site_url = json.get("siteUrl")
         msg += shorten(description, site_url)
-        image = json.get("image", None)
-        if image:
+        if image := json.get("image", None):
             image = image.get("large")
             update.effective_message.reply_photo(
                 photo=image,
@@ -291,7 +284,7 @@ def character(update: Update, context: CallbackContext):
                 msg.replace("<b>", "</b>"), parse_mode=ParseMode.MARKDOWN
             )
 
-
+@kigcmd(command="manga")
 def manga(update: Update, context: CallbackContext):
     message = update.effective_message
     search = message.text.split(" ", 1)
@@ -334,7 +327,7 @@ def manga(update: Update, context: CallbackContext):
         info = json["siteUrl"]
         buttons = [[InlineKeyboardButton("More Info", url=info)]]
         image = json.get("bannerImage", False)
-        msg += f"_{json.get('description', None)}_"
+        msg += f"_{bs4.BeautifulSoup(json.get('description', None), features='html.parser').text}_"
         if image:
             try:
                 update.effective_message.reply_photo(
@@ -343,7 +336,7 @@ def manga(update: Update, context: CallbackContext):
                     parse_mode=ParseMode.MARKDOWN,
                     reply_markup=InlineKeyboardMarkup(buttons),
                 )
-            except:
+            except Exception:
                 msg += f" [〽️]({image})"
                 update.effective_message.reply_text(
                     msg,
@@ -364,14 +357,3 @@ def get_help(chat):
     return gs(chat, "anilist_help")
 
 __mod_name__ = "AniList"
-
-
-AIRING_HANDLER = DisableAbleCommandHandler("airing", airing, run_async=True)
-ANIME_HANDLER = DisableAbleCommandHandler("anime", anime, run_async=True)
-CHARACTER_HANDLER = DisableAbleCommandHandler("character", character, run_async=True)
-MANGA_HANDLER = DisableAbleCommandHandler("manga", manga, run_async=True)
-
-dispatcher.add_handler(AIRING_HANDLER)
-dispatcher.add_handler(ANIME_HANDLER)
-dispatcher.add_handler(MANGA_HANDLER)
-dispatcher.add_handler(CHARACTER_HANDLER)

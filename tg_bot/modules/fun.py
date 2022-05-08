@@ -4,24 +4,26 @@ import random
 import time
 import urllib.request
 import urllib.parse
-import requests
+
+import telegram
 from telegram import ParseMode, Update, ChatPermissions
 from telegram.ext import CallbackContext
-from telegram.error import BadRequest
 
 import tg_bot.modules.fun_strings as fun_strings
-from tg_bot import dispatcher
-from tg_bot.modules.disable import DisableAbleCommandHandler
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
 from tg_bot.modules.helper_funcs.extraction import extract_user
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 
+@kigcmd(command='runs')
 def runs(update: Update, context: CallbackContext):
     update.effective_message.reply_text(random.choice(fun_strings.RUN_STRINGS))
 
 
+@kigcmd(command='slap')
 def slap(update: Update, context: CallbackContext):
-    bot, args = context.bot, context.args
+    bot: telegram.Bot = context.bot
+    args = context.args
     message = update.effective_message
     chat = update.effective_chat
 
@@ -31,7 +33,8 @@ def slap(update: Update, context: CallbackContext):
         else message.reply_text
     )
 
-    curr_user = html.escape(message.from_user.first_name)
+    curr_user = html.escape(message.from_user.first_name) if not message.sender_chat else html.escape(
+        message.sender_chat.title)
     user_id = extract_user(message, args)
 
     if user_id == bot.id:
@@ -39,7 +42,7 @@ def slap(update: Update, context: CallbackContext):
 
         if isinstance(temp, list):
             if temp[2] == "tmute":
-                if is_user_admin(chat, message.from_user.id):
+                if is_user_admin(update, message.from_user.id):
                     reply_text(temp[1])
                     return
 
@@ -59,7 +62,7 @@ def slap(update: Update, context: CallbackContext):
 
         slapped_user = bot.get_chat(user_id)
         user1 = curr_user
-        user2 = html.escape(slapped_user.first_name)
+        user2 = html.escape(slapped_user.first_name if slapped_user.first_name else slapped_user.title)
 
     else:
         user1 = bot.first_name
@@ -74,6 +77,7 @@ def slap(update: Update, context: CallbackContext):
     reply_text(reply, parse_mode=ParseMode.HTML)
 
 
+@kigcmd(command='pat')
 def pat(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     msg = str(update.message.text)
@@ -93,12 +97,12 @@ def pat(update: Update, context: CallbackContext):
                 "http://headp.at/js/pats.json",
                 headers={
                     "User-Agent": "Mozilla/5.0 (X11; U; Linux i686) "
-                    "Gecko/20071127 Firefox/2.0.0.11"
+                                  "Gecko/20071127 Firefox/2.0.0.11"
                 },
             )
         )
-        .read()
-        .decode("utf-8")
+            .read()
+            .decode("utf-8")
     )
     if "@" in msg and len(msg) > 5:
         context.bot.send_photo(
@@ -114,14 +118,17 @@ def pat(update: Update, context: CallbackContext):
         )
 
 
+@kigcmd(command='roll')
 def roll(update: Update, context: CallbackContext):
     update.message.reply_text(random.choice(range(1, 7)))
 
 
+@kigcmd(command='toss')
 def toss(update: Update, context: CallbackContext):
     update.message.reply_text(random.choice(fun_strings.TOSS))
 
 
+@kigcmd(command='shrug')
 def shrug(update: Update, context: CallbackContext):
     msg = update.effective_message
     reply_text = (
@@ -130,6 +137,7 @@ def shrug(update: Update, context: CallbackContext):
     reply_text(r"¯\_(ツ)_/¯")
 
 
+@kigcmd(command='rlg')
 def rlg(update: Update, context: CallbackContext):
     eyes = random.choice(fun_strings.EYES)
     mouth = random.choice(fun_strings.MOUTHS)
@@ -142,6 +150,7 @@ def rlg(update: Update, context: CallbackContext):
     update.message.reply_text(repl)
 
 
+@kigcmd(command='decide')
 def decide(update: Update, context: CallbackContext):
     reply_text = (
         update.effective_message.reply_to_message.reply_text
@@ -151,6 +160,7 @@ def decide(update: Update, context: CallbackContext):
     reply_text(random.choice(fun_strings.DECIDE))
 
 
+@kigcmd(command='table')
 def table(update: Update, context: CallbackContext):
     reply_text = (
         update.effective_message.reply_to_message.reply_text
@@ -159,53 +169,12 @@ def table(update: Update, context: CallbackContext):
     )
     reply_text(random.choice(fun_strings.TABLE))
 
+
 from tg_bot.modules.language import gs
+
 
 def get_help(chat):
     return gs(chat, "fun_help")
 
 
-RUNS_HANDLER = DisableAbleCommandHandler("runs", runs, run_async=True)
-SLAP_HANDLER = DisableAbleCommandHandler("slap", slap, pass_args=True, run_async=True)
-ROLL_HANDLER = DisableAbleCommandHandler("roll", roll, run_async=True)
-TOSS_HANDLER = DisableAbleCommandHandler("toss", toss, run_async=True)
-SHRUG_HANDLER = DisableAbleCommandHandler("shrug", shrug, run_async=True)
-RLG_HANDLER = DisableAbleCommandHandler("rlg", rlg, run_async=True)
-DECIDE_HANDLER = DisableAbleCommandHandler("decide", decide, run_async=True)
-TABLE_HANDLER = DisableAbleCommandHandler("table", table, run_async=True)
-PAT_HANDLER = DisableAbleCommandHandler("pat", pat, run_async=True)
-
-
-dispatcher.add_handler(RUNS_HANDLER)
-dispatcher.add_handler(SLAP_HANDLER)
-dispatcher.add_handler(ROLL_HANDLER)
-dispatcher.add_handler(TOSS_HANDLER)
-dispatcher.add_handler(SHRUG_HANDLER)
-dispatcher.add_handler(RLG_HANDLER)
-dispatcher.add_handler(DECIDE_HANDLER)
-dispatcher.add_handler(TABLE_HANDLER)
-dispatcher.add_handler(PAT_HANDLER)
-
 __mod_name__ = "Fun"
-__command_list__ = [
-    "runs",
-    "slap",
-    "roll",
-    "toss",
-    "shrug",
-    "rlg",
-    "decide",
-    "table",
-    "pat",
-]
-__handlers__ = [
-    RUNS_HANDLER,
-    SLAP_HANDLER,
-    ROLL_HANDLER,
-    TOSS_HANDLER,
-    SHRUG_HANDLER,
-    RLG_HANDLER,
-    DECIDE_HANDLER,
-    TABLE_HANDLER,
-    PAT_HANDLER,
-]

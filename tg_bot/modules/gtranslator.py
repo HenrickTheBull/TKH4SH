@@ -1,35 +1,28 @@
-from gpytranslate import Translator
-from telegram.ext import CommandHandler, CallbackContext
-from telegram import (
-    Message,
-    Chat,
-    User,
-    ParseMode,
-    Update,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-)
-from tg_bot import dispatcher, kp
-from pyrogram import filters
-from pyrogram.types import Message
-from tg_bot.modules.disable import DisableAbleCommandHandler
+from gpytranslate import SyncTranslator
 from tg_bot.modules.language import gs
 
 
 def get_help(chat):
     return gs(chat, "gtranslate_help")
 
+
 __mod_name__ = "Translator"
 
+trans = SyncTranslator()
 
-trans = Translator()
+from telegram import ParseMode, Update
+from telegram.ext import CallbackContext
+from tg_bot.modules.helper_funcs.decorators import kigcmd
 
 
-@kp.on_message(filters.command(["tl", "tr"]))
-async def translate(_, message: Message) -> None:
+@kigcmd(command=["tr", "tl"])
+def translate(update: Update, context: CallbackContext) -> None:
+    global to_translate
+    bot = context.bot
+    message = update.effective_message
     reply_msg = message.reply_to_message
     if not reply_msg:
-        await message.reply_text("Reply to a message to translate it!")
+        message.reply_text("Reply to a message to translate it!")
         return
     if reply_msg.caption:
         to_translate = reply_msg.caption
@@ -41,35 +34,24 @@ async def translate(_, message: Message) -> None:
             source = args.split("//")[0]
             dest = args.split("//")[1]
         else:
-            source = await trans.detect(to_translate)
+            source = trans.detect(to_translate)
             dest = args
     except IndexError:
-        source = await trans.detect(to_translate)
+        source = trans.detect(to_translate)
         dest = "en"
-    translation = await trans(to_translate,
-                              sourcelang=source, targetlang=dest)
+    translation = trans(to_translate,
+                        sourcelang=source, targetlang=dest)
     reply = f"<b>Translated from {source} to {dest}</b>:\n" \
-        f"<code>{translation.text}</code>"
+            f"<code>{translation.text}</code>"
 
-    await message.reply_text(reply, parse_mode="html")
+    bot.send_message(text=reply, chat_id=message.chat.id, parse_mode=ParseMode.HTML)
 
+
+@kigcmd(command='langs')
 def languages(update: Update, context: CallbackContext) -> None:
-    update.effective_message.reply_text(
-        "Click on the button below to see the list of supported language codes.",
-        reply_markup=InlineKeyboardMarkup(
-            [
-                [
-                    InlineKeyboardButton(
-                        text="Language codes",
-                        url="https://telegra.ph/Lang-Codes-03-19-3"
-                        ),
-                ],
-            ],
-        disable_web_page_preview=True
-    )
-        )
-
-
-LANG_HANDLER = DisableAbleCommandHandler("langs", languages, run_async=True)
-
-dispatcher.add_handler(LANG_HANDLER)
+    message = update.effective_message
+    bot = context.bot
+    bot.send_message(
+        text="Click [here](https://cloud.google.com/translate/docs/languages) to see the list of supported language "
+             "codes!",
+        chat_id=message.chat.id, disable_web_page_preview=True, parse_mode=ParseMode.MARKDOWN)

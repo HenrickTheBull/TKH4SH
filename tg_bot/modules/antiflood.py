@@ -1,6 +1,6 @@
 import html
 import re
-from typing import Optional, List
+from typing import Optional
 
 from telegram import (
     Message,
@@ -8,9 +8,6 @@ from telegram import (
     Update,
     Bot,
     User,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    ParseMode,
     ChatPermissions,
 )
 
@@ -21,38 +18,34 @@ from tg_bot.modules.helper_funcs.chat_status import (
     can_restrict,
     connection_status,
     is_user_admin,
-    user_admin,
     user_admin_no_reply,
 )
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import antiflood_sql as sql
 from telegram.error import BadRequest
 from telegram.ext import (
-    CommandHandler,
     Filters,
-    MessageHandler,
-    CallbackQueryHandler,
     CallbackContext,
 )
 from telegram.utils.helpers import mention_html, escape_markdown
 from tg_bot import dispatcher
-from tg_bot.modules.helper_funcs.chat_status import (
-    is_user_admin,
-    user_admin,
-    can_restrict,
-)
 from tg_bot.modules.helper_funcs.string_handling import extract_time
 from tg_bot.modules.log_channel import loggable
 from tg_bot.modules.sql import antiflood_sql as sql
 from tg_bot.modules.connection import connected
 from tg_bot.modules.helper_funcs.alternate import send_message
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, kigcallback
 
-FLOOD_GROUP = 3
+from ..modules.helper_funcs.anonymous import user_admin, AdminPerms
+
+FLOOD_GROUP = -5
 
 
+@kigmsg((Filters.all & ~Filters.status_update & Filters.chat_type.groups), group=FLOOD_GROUP)
 @connection_status
 @loggable
-def check_flood(update, context) -> str:
+def check_flood(update, context) -> Optional[str]:
+    global execstrings
     user = update.effective_user  # type: Optional[User]
     chat = update.effective_chat  # type: Optional[Chat]
     msg = update.effective_message  # type: Optional[Message]
@@ -61,13 +54,13 @@ def check_flood(update, context) -> str:
 
     # ignore admins and whitelists
     if (
-        is_user_admin(chat, user.id)
-        or user.id in WHITELIST_USERS
-        or user.id in SARDEGNA_USERS
+            is_user_admin(update, user.id)
+            or user.id in WHITELIST_USERS
+            or user.id in SARDEGNA_USERS
     ):
         sql.update_flood(chat.id, None)
         return ""
-      # ignore approved users
+    # ignore approved users
     if is_approved(chat.id, user.id):
         sql.update_flood(chat.id, None)
         return
@@ -79,11 +72,11 @@ def check_flood(update, context) -> str:
     try:
         getmode, getvalue = sql.get_flood_setting(chat.id)
         if getmode == 1:
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             execstrings = "Banned"
             tag = "BANNED"
         elif getmode == 2:
-            chat.kick_member(user.id)
+            chat.ban_member(user.id)
             chat.unban_member(user.id)
             execstrings = "Kicked"
             tag = "KICKED"
@@ -95,7 +88,7 @@ def check_flood(update, context) -> str:
             tag = "MUTED"
         elif getmode == 4:
             bantime = extract_time(msg, getvalue)
-            chat.kick_member(user.id, until_date=bantime)
+            chat.ban_member(user.id, until_date=bantime)
             execstrings = "Banned for {}".format(getvalue)
             tag = "TBAN"
         elif getmode == 5:
@@ -137,6 +130,7 @@ def check_flood(update, context) -> str:
 
 @user_admin_no_reply
 @bot_admin
+@kigcallback(pattern=r"unmute_flooder")
 def flood_button(update: Update, context: CallbackContext):
     bot = context.bot
     query = update.callback_query
@@ -164,11 +158,12 @@ def flood_button(update: Update, context: CallbackContext):
             pass
 
 
+@kigcmd(command='setflood', pass_args=True, filters=Filters.chat_type.groups)
 @connection_status
-@user_admin
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
 @can_restrict
 @loggable
-def set_flood(update, context) -> str:
+def set_flood(update, context) -> str:  # sourcery no-metrics
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     message = update.effective_message  # type: Optional[Message]
@@ -190,7 +185,7 @@ def set_flood(update, context) -> str:
 
     if len(args) >= 1:
         val = args[0].lower()
-        if val == "off" or val == "no" or val == "0":
+        if val in ["off", "no", "0"]:
             sql.set_flood(chat_id, 0)
             if conn:
                 text = message.reply_text(
@@ -260,6 +255,7 @@ def set_flood(update, context) -> str:
     return ""
 
 
+@kigcmd(command="flood", filters=Filters.chat_type.groups)
 @connection_status
 def flood(update, context):
     chat = update.effective_chat  # type: Optional[Chat]
@@ -288,23 +284,24 @@ def flood(update, context):
             )
         else:
             text = msg.reply_text("I'm not enforcing any flood control here!")
+    elif conn:
+        text = msg.reply_text(
+            "I'm currently restricting members after {} consecutive messages in {}.".format(
+                limit, chat_name
+            )
+        )
     else:
-        if conn:
-            text = msg.reply_text(
-                "I'm currently restricting members after {} consecutive messages in {}.".format(
-                    limit, chat_name
-                )
+        text = msg.reply_text(
+            "I'm currently restricting members after {} consecutive messages.".format(
+                limit
             )
-        else:
-            text = msg.reply_text(
-                "I'm currently restricting members after {} consecutive messages.".format(
-                    limit
-                )
-            )
+        )
 
 
-@user_admin
-def set_flood_mode(update, context):
+@kigcmd(command="setfloodmode", pass_args=True, filters=Filters.chat_type.groups)
+@user_admin(AdminPerms.CAN_CHANGE_INFO)
+def set_flood_mode(update, context):  # sourcery no-metrics
+    global settypeflood
     chat = update.effective_chat  # type: Optional[Chat]
     user = update.effective_user  # type: Optional[User]
     msg = update.effective_message  # type: Optional[Message]
@@ -419,48 +416,12 @@ def __chat_settings__(chat_id, user_id):
     else:
         return "Antiflood has been set to`{}`.".format(limit)
 
+
 from tg_bot.modules.language import gs
+
 
 def get_help(chat):
     return gs(chat, "antiflood_help")
 
+
 __mod_name__ = "Anti-Flood"
-
-FLOOD_BAN_HANDLER = MessageHandler(
-    Filters.all & ~Filters.status_update & Filters.chat_type.groups,
-    check_flood,
-    run_async=True,
-)
-SET_FLOOD_HANDLER = CommandHandler(
-    "setflood",
-    set_flood,
-    pass_args=True,
-    filters=Filters.chat_type.groups,
-    run_async=True,
-)
-SET_FLOOD_MODE_HANDLER = CommandHandler(
-    "setfloodmode",
-    set_flood_mode,
-    pass_args=True,
-    filters=Filters.chat_type.groups,
-    run_async=True,
-)
-FLOOD_QUERY_HANDLER = CallbackQueryHandler(
-    flood_button, pattern=r"unmute_flooder", run_async=True
-)
-FLOOD_HANDLER = CommandHandler(
-    "flood", flood, filters=Filters.chat_type.groups, run_async=True
-)
-
-dispatcher.add_handler(FLOOD_BAN_HANDLER, FLOOD_GROUP)
-dispatcher.add_handler(FLOOD_QUERY_HANDLER)
-dispatcher.add_handler(SET_FLOOD_HANDLER)
-dispatcher.add_handler(SET_FLOOD_MODE_HANDLER)
-dispatcher.add_handler(FLOOD_HANDLER)
-
-__handlers__ = [
-    (FLOOD_BAN_HANDLER, FLOOD_GROUP),
-    SET_FLOOD_HANDLER,
-    FLOOD_HANDLER,
-    SET_FLOOD_MODE_HANDLER,
-]
