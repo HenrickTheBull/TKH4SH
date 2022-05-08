@@ -55,11 +55,11 @@ def addsudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        rt += "Requested Eagle Union to promote a Support user to Sudo."
+        rt += "Requested HQ to promote a Support user to Sudo."
         SUPPORT_USERS.remove(user_id)
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested Eagle Union to promote a Whitelist user to Sudo."
+        rt += "Requested HQ to promote a Whitelist user to Sudo."
         WHITELIST_USERS.remove(user_id)
 
     # will add or update their role
@@ -106,7 +106,7 @@ def addsupport(
         return ""
 
     if user_id in SUDO_USERS:
-        rt += "Requested Eagle Union to demote this Sudo to Support"
+        rt += "Requested HQ to demote this Sudo to Support"
         SUDO_USERS.remove(user_id)
 
     if user_id in SUPPORT_USERS:
@@ -114,7 +114,7 @@ def addsupport(
         return ""
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested Eagle Union to promote this Whitelist user to Support"
+        rt += "Requested HQ to promote this Whitelist user to Support"
         WHITELIST_USERS.remove(user_id)
 
     sql.set_royal_role(user_id, "supports")
@@ -253,7 +253,7 @@ def removesudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUDO_USERS:
-        message.reply_text("Requested Eagle Union to demote this user to Civilian")
+        message.reply_text("Requested HQ to demote this user to Civilian")
         SUDO_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -290,7 +290,7 @@ def removesupport(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        message.reply_text("Requested Eagle Union to demote this user to Civilian")
+        message.reply_text("Requested HQ to demote this user to Civilian")
         SUPPORT_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -382,16 +382,16 @@ def removesardegna(update: Update, context: CallbackContext) -> str:
         return ""
 
 # I added extra new lines
-nations = """ Kigyō has bot access levels we call as *"Nation Levels"*
-\n*Eagle Union* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
+nations = """ H4SH has bot access levels we call as *"Nation Levels"*
+\n*Sudos* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
 \n*God* - Only one exists, bot owner.
-Owner has complete bot access, including bot adminship in chats Kigyō is at.
-\n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in Kigyō.
-\n*Sakuras* - Have access go globally ban users across Kigyō.
+Owner has complete bot access, including bot adminship in chats H4SH is at.
+\n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in H4SH.
+\n*Sakuras* - Have access go globally ban users across H4SH.
 \n*Sardegnas* - Same as Neptunians but can unban themselves if banned.
 \n*Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
-\n*Disclaimer*: The Nation levels in Kigyō are there for troubleshooting, support, banning potential scammers.
-Report abuse or ask us more on these at [Eagle Union](https://t.me/YorktownEagleUnion).
+\n*Disclaimer*: The Nation levels in H4SH are there for troubleshooting, support, banning potential scammers.
+Report abuse or ask us more on these at [H4SH Labs](https://t.me/H4SHLabs).
 """
 
 
@@ -463,7 +463,7 @@ def sudolist(update: Update, context: CallbackContext):
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>Eagle Union Members :</b>\n"
+    reply = "<b>H4SH Labs Members :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:

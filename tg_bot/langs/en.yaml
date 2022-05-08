@@ -10,7 +10,7 @@ set_chat_lang: "Great, {} it is from now on!"
 
 pm_start_text: |
    Hi {}, I'm {},
-   I am an Anime themed group management bot with some fun extras ;)
+   I am a group management bot with some fun extras ;)
    
    I can do a variety of things, most common of em are:
    - Restrict users with *ban permissions*.
@@ -25,10 +25,10 @@ pm_start_text: |
    
    *Click on help to learn more!*
    
-grp_start_text: "Hi, I'm Kigyo."
+grp_start_text: "Hi, I'm H4SH."
 
 pm_help_text: |
-   Hello there! My name is *Kigyo*. A part of *Eagle Union*.
+   Hello there! My name is *H4SH*. A part of *H4SH Labs*.
    I'm a modular group management bot with a few fun extras! Have a look at the following for an idea of some of
    the things I can help you with.
    *Main* commands available:
@@ -40,7 +40,7 @@ pm_help_text: |
       - in a group: will redirect you to pm, with all that chat's settings.
     Click on the buttons below to get documentation about specific modules!
 
-add_bot_to_group_btn: "Add Kigyo"
+add_bot_to_group_btn: "Add H4SH"
 support_chat_link_btn: "Support"
 updates_channel_link_btn: "Updates"
 src_btn: "Source code"
@@ -455,13 +455,13 @@ greetings_help: |
        • `/welcomehelp`*:* view more formatting information for custom welcome/goodbye messages.
 
 nation_help: |
-      - /eagle - Lists all Eagle Union members.
+      - /eagle - Lists all Sudo members.
       - /royals - Lists all Royal Nations.
       - /sakuras - Lists all Sakura Nations.
       - /sardegnas - Lists all Sardegnas Nations.
       - /neptunians - Lists all Neptunia Nations.
       Note: These commands list users with special bot priveleges and can only be used by them.
-      You can visit @YorktownEagleUnion to query more about these.
+      You can visit @H4SHLabs to query more about these.
 
 
 sticker_blacklist_help: |
