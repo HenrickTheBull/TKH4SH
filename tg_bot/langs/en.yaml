@@ -211,7 +211,7 @@ FED_USER_HELP: |
     • `/frules`*:* See Federation regulations
 
 formt_help_bse: |
-    Kigyo supports a large number of formatting options to make your messages more expressive. Take a look!
+    H4SH supports a large number of formatting options to make your messages more expressive. Take a look!
 
 md_help: |
     <b>Markdown Formatting</b>
@@ -263,9 +263,9 @@ antispam_help: |
 
      Anti-Spam, used by bot devs to ban spammers across all groups. This helps protect
      you and your groups by removing spam flooders as quickly as possible.
-     *Note:* Users can appeal gbans or report spammers at @YorkTownEagleUnion
+     *Note:* Users can appeal gbans or report spammers at @H4SHLabs
 
-     Kigyo also integrates @Spamwatch API to remove Spammers as much as possible from your chatroom!
+     H4SH also integrates @Spamwatch API to remove Spammers as much as possible from your chatroom!
      *What is SpamWatch?*
      SpamWatch maintains a large constantly updated ban-list of spambots, trolls, bitcoin spammers and unsavoury characters.
      Constantly help banning spammers off from your group automatically So, you wont have to worry about spammers storming your group.
@@ -319,7 +319,7 @@ log_help: |
       • forwarding the `/setlog` to the group
 
 markdown_help_text: |
-      Markdown is a very powerful formatting tool supported by telegram. Kigyo has some enhancements, to make sure that
+      Markdown is a very powerful formatting tool supported by telegram. H4SH has some enhancements, to make sure that
       saved messages are correctly parsed, and to allow you to create buttons.
 
       - <code>_italic_</code>: wrapping text with '_' will produce italic text
@@ -368,8 +368,8 @@ misc_help: |
       Tired of telegram's stupidity? well here you go
       *Available commands:*
       • /antichannel <on/off>: Bans and deletes anyone who tries to talk as channel and forces em to talk as themselves
-      • /antilinkedchan <on/off>: Makes Kigyo automatically delete linked channel posts from chatroom
-      • /antichannelpin <on/off>: Makes Kigyo automatically unpin linked channel posts from chatroom
+      • /antilinkedchan <on/off>: Makes H4SH automatically delete linked channel posts from chatroom
+      • /antichannelpin <on/off>: Makes H4SH automatically unpin linked channel posts from chatroom
 
 muting_help: |
       *Admins only:*
