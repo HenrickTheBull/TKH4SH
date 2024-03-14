@@ -46,7 +46,7 @@ def _selective_escape(to_parse: str) -> str:
     return to_parse
 
 
-# This is a fun one.
+ #This is a fun one.
 def _calc_emoji_offset(to_calc) -> int:
     # Get all emoji in text.
     emoticons = emoji.get_emoji_regexp().finditer(to_calc)

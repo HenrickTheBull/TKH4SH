@@ -8,8 +8,7 @@ import telegram.ext as tg
 from telethon import TelegramClient
 from telethon.sessions import MemorySession
 from configparser import ConfigParser
-from ptbcontrib.postgres_persistence import PostgresPersistence
-from logging.config import fileConfig
+from logging.handlers import RotatingFileHandler
 
 StartTime = time.time()
 
@@ -24,16 +23,17 @@ def get_user_list(key):
     royals = nation_sql.get_royals(key)
     return [a.user_id for a in royals]
 
-# enable logging
-
-fileConfig('logging.ini')
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[RotatingFileHandler('kigyo.log', maxBytes=1024*1024, backupCount=5), logging.StreamHandler()],
+    level=logging.INFO,
+)
 
 #print(flag)
 log = logging.getLogger('[Enterprise]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
-log.info("[H4SH] H4SH is starting. | A H4SH Labs Project. | Licensed under GPLv3.")
-log.info("[H4SH] Not affiliated with anyone but ourselves")
-log.info("[H4SH] Project maintained by: github.com/henrickthebull (t.me/HenrickTheBull)")
+log.info("[H4SH] H4SH is starting. | An H4SH Labs Project. | Licensed under GPLv3.")
+log.info("[KIGYO] Project maintained by: github.com/HenrickTheBull (t.me/thebullbastard")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:
@@ -139,14 +139,9 @@ CF_API_KEY = KInit.CF_API_KEY
 # SpamWatch
 sw = KInit.init_sw()
 
-from tg_bot.modules.sql import SESSION
 
-if not KInit.DROP_UPDATES:
-    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10}, persistence=PostgresPersistence(session=SESSION))
-    
-else:
-    updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
-    
+updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
+
 telethn = TelegramClient(MemorySession(), APP_ID, API_HASH)
 dispatcher = updater.dispatcher
 

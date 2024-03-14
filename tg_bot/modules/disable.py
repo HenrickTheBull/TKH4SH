@@ -10,10 +10,7 @@ from tg_bot.modules.helper_funcs.handlers import CMD_STARTERS
 from tg_bot.modules.helper_funcs.misc import is_module_loaded
 from tg_bot.modules.helper_funcs.alternate import send_message, typing_action
 from tg_bot.modules.connection import connected
-from tg_bot.modules.language import gs
 
-def get_help(chat):
-    return gs(chat, "disable_help")
 
 
 CMD_STARTERS = tuple(CMD_STARTERS)
@@ -98,7 +95,7 @@ if is_module_loaded(FILENAME):
                 return self.filters(update) and not sql.is_command_disabled(
                     chat.id, self.friendly
                 )
-
+                
     @user_admin
     @typing_action
     def disable(update, context):
@@ -270,16 +267,16 @@ It'll also allow you to autodelete them, stopping people from bluetexting.
     """
 
     DISABLE_HANDLER = CommandHandler(
-        "disable", disable, pass_args=True
+        "disable", disable, pass_args=True, run_async=True
     )  # , filters=Filters.chat_type.groups)
     ENABLE_HANDLER = CommandHandler(
-        "enable", enable, pass_args=True
+        "enable", enable, pass_args=True, run_async=True
     )  # , filters=Filters.chat_type.groups)
     COMMANDS_HANDLER = CommandHandler(
-        ["cmds", "disabled"], commands
+        ["cmds", "disabled"], commands, run_async=True
     )  # , filters=Filters.chat_type.groups)
     TOGGLE_HANDLER = CommandHandler(
-        "listcmds", list_cmds
+        "listcmds", list_cmds, run_async=True
     )  # , filters=Filters.chat_type.groups)
 
     dispatcher.add_handler(DISABLE_HANDLER)
@@ -290,3 +287,8 @@ It'll also allow you to autodelete them, stopping people from bluetexting.
 else:
     DisableAbleCommandHandler = CommandHandler
     DisableAbleMessageHandler = MessageHandler
+
+from tg_bot.modules.language import gs
+
+def get_help(chat):
+    return gs(chat, "disable_help")

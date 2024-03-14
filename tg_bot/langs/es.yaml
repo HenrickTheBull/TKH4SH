@@ -182,7 +182,7 @@ antispam_help: |
   
    Anti-Spam, utilizado por los desarrolladores de bots para prohibir a los spammers en todos los grupos.  Esto ayuda a proteger
    usted y sus grupos eliminando los flooders de spam lo más rápido posible.
-   * Nota: * Los usuarios pueden apelar gbans o denunciar spammers en @YorkTownEagleUnion
+   * Nota: * Los usuarios pueden apelar gbans o denunciar spammers en @H4SHLabs
   
    ¡Kigyo también integra la API de @Spamwatch para eliminar los spammers tanto como sea posible de su sala de chat!
    * ¿Qué es SpamWatch? *
@@ -355,4 +355,4 @@ nation_help: |
    - /sardegnas: enumera todas las naciones Sardegnas.
    - /neptunianos: enumera todas las naciones de Neptunia.
    Nota: Estos comandos enumeran a los usuarios con privilegios especiales de bot y solo pueden ser utilizados por ellos.
-   Puede visitar @YorktownEagleUnion para consultar más sobre estos.
+   Puede visitar @H4SHLabs para consultar más sobre estos.

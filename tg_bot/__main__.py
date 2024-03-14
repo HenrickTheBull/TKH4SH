@@ -38,7 +38,7 @@ from tg_bot import (
 # NOTE: Module order is not guaranteed, specify that in the config file!
 from tg_bot.modules import ALL_MODULES
 from tg_bot.modules.helper_funcs.chat_status import is_user_admin
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigcallback, kigmsg, rate_limit
 from tg_bot.modules.helper_funcs.misc import paginate_modules
 from tg_bot.modules.language import gs
 
@@ -101,7 +101,7 @@ def send_help(chat_id, text, keyboard=None):
 
     if not keyboard:
         kb = paginate_modules(0, HELPABLE, "help")
-        # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
+        # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/H4SHLabs'),
         #           InlineKeyboardButton(text='Back', callback_data='start_back'),
         #           InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
         keyboard = InlineKeyboardMarkup(kb)
@@ -126,6 +126,7 @@ def test(update: Update, _: CallbackContext):
 
 @kigcallback(pattern=r'start_back')
 @kigcmd(command='start', pass_args=True)
+@rate_limit(40, 60)
 def start(update: Update, context: CallbackContext):  # sourcery no-metrics
     """#TODO
 
@@ -156,11 +157,11 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "updates_channel_link_btn"),
-                                url="https://t.me/H4SH_Updates",
+                                url="https://t.me/KigyoUpdates",
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/HenrickTheBull/TKH4SH/",
+                                url="https://github.com/AnimeKaizoku/EnterpriseALRobot/",
                             ),
                         ],
                         [
@@ -250,11 +251,11 @@ def start(update: Update, context: CallbackContext):  # sourcery no-metrics
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "updates_channel_link_btn"),
-                                url="https://t.me/H4SH_Updates",
+                                url="https://t.me/KigyoUpdates",
                             ),
                             InlineKeyboardButton(
                                 text=gs(chat.id, "src_btn"),
-                                url="https://github.com/HenrickTheBull/TKH4SH/",
+                                url="https://github.com/Dank-del/EnterpriseALRobot",
                             ),
                         ],
                         [
@@ -315,6 +316,7 @@ def error_callback(_, context: CallbackContext):
 
 
 @kigcallback(pattern=r'help_')
+@rate_limit(40, 60)
 def help_button(update: Update, context: CallbackContext):
     """#TODO
 
@@ -361,7 +363,7 @@ def help_button(update: Update, context: CallbackContext):
         elif prev_match:
             curr_page = int(prev_match.group(1))
             kb = paginate_modules(curr_page - 1, HELPABLE, "help")
-            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
+            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/H4SHLabs'),
             #           InlineKeyboardButton(text='Back', callback_data='start_back'),
             #           InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
             query.message.edit_text(
@@ -373,7 +375,7 @@ def help_button(update: Update, context: CallbackContext):
         elif next_match:
             next_page = int(next_match.group(1))
             kb = paginate_modules(next_page + 1, HELPABLE, "help")
-            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
+            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/H4SHLabs'),
             #           InlineKeyboardButton(text='Back', callback_data='start_back'),
             #           InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
             query.message.edit_text(
@@ -384,7 +386,7 @@ def help_button(update: Update, context: CallbackContext):
 
         elif back_match:
             kb = paginate_modules(0, HELPABLE, "help")
-            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/YorkTownEagleUnion'),
+            # kb.append([InlineKeyboardButton(text='Support', url='https://t.me/H4SHLabs'),
             #           InlineKeyboardButton(text='Back', callback_data='start_back'),
             #           InlineKeyboardButton(text="Try inline", switch_inline_query_current_chat="")])
             query.message.edit_text(
@@ -402,6 +404,7 @@ def help_button(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='help')
+@rate_limit(40, 60)
 def get_help(update: Update, context: CallbackContext):
     '''#TODO
 
@@ -535,6 +538,7 @@ def send_settings(chat_id: int, user_id: int, user=False):
 
 
 @kigcallback(pattern=r"stngs_")
+@rate_limit(40, 60)
 def settings_button(update: Update, context: CallbackContext):
     '''#TODO
 
@@ -626,6 +630,7 @@ def settings_button(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='settings')
+@rate_limit(40, 60)
 def get_settings(update: Update, context: CallbackContext):
     '''#TODO
 
@@ -664,6 +669,7 @@ def get_settings(update: Update, context: CallbackContext):
 
 
 @kigcmd(command='donate')
+@rate_limit(40, 60)
 def donate(update: Update, _: CallbackContext):
     """#TODO
 
@@ -676,6 +682,7 @@ def donate(update: Update, _: CallbackContext):
 
 
 @kigmsg(Filters.status_update.migrate)
+@rate_limit(40, 60)
 def migrate_chats(update: Update, context: CallbackContext):
     """#TODO
     Params:
@@ -707,12 +714,10 @@ def main():
 
     if WEBHOOK:
         log.info("Using webhooks.")
-        updater.start_webhook(listen="127.0.0.1", port=PORT, url_path=TOKEN)
-
-        if CERT_PATH:
-            updater.bot.set_webhook(url=URL + TOKEN, certificate=open(CERT_PATH, "rb"))
-        else:
-            updater.bot.set_webhook(url=URL + TOKEN)
+        updater.start_webhook(listen="0.0.0.0", port=PORT, url_path=TOKEN, allowed_updates=Update.ALL_TYPES, 
+                            webhook_url=URL+TOKEN, drop_pending_updates=KInit.DROP_UPDATES, 
+                            cert=CERT_PATH if CERT_PATH else None)
+        log.info(f"Kigyo started, Using webhooks. | BOT: [@{dispatcher.bot.username}]")
 
     else:
         log.info(f"Kigyo started, Using long polling. | BOT: [@{dispatcher.bot.username}]")
@@ -721,10 +726,7 @@ def main():
         KigyoINIT.bot_name = dispatcher.bot.first_name
         updater.start_polling(timeout=15, read_latency=4, allowed_updates=Update.ALL_TYPES,
                               drop_pending_updates=KInit.DROP_UPDATES)
-    if len(argv) not in (1, 3, 4):
-        telethn.disconnect()
-    else:
-        telethn.run_until_disconnected()
+    telethn.run_until_disconnected()
     updater.idle()
 
 

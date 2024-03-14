@@ -6,10 +6,11 @@ from telegram.ext import Filters, CallbackContext
 from telegram.error import BadRequest
 from tg_bot.modules.sql import afk_sql as sql
 from tg_bot.modules.users import get_user_id
-from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg
+from tg_bot.modules.helper_funcs.decorators import kigcmd, kigmsg, rate_limit
 
 @kigmsg(Filters.regex("(?i)^brb"), friendly="afk", group=3)
 @kigcmd(command="afk", group=3)
+@rate_limit(40, 60)
 def afk(update: Update, context: CallbackContext):
     args = update.effective_message.text.split(None, 1)
     user = update.effective_user
@@ -36,7 +37,8 @@ def afk(update: Update, context: CallbackContext):
     except BadRequest:
         pass
 
-@kigmsg((Filters.all & Filters.chat_type.groups), friendly='afk', group=1)
+@kigmsg((Filters.all & Filters.chat_type.groups & ~Filters.user(777000)), friendly='afk', group=1)
+@rate_limit(40, 60)
 def no_longer_afk(update: Update, context: CallbackContext):
     user = update.effective_user
     message = update.effective_message
@@ -68,6 +70,7 @@ def no_longer_afk(update: Update, context: CallbackContext):
             return
 
 @kigmsg((Filters.entity(MessageEntity.MENTION) | Filters.entity(MessageEntity.TEXT_MENTION) & Filters.chat_type.groups), friendly='afk', group=8)
+@rate_limit(40, 60)
 def reply_afk(update: Update, context: CallbackContext):
     bot = context.bot
     message = update.effective_message
@@ -107,11 +110,7 @@ def reply_afk(update: Update, context: CallbackContext):
             try:
                 chat = bot.get_chat(user_id)
             except BadRequest:
-                print(
-                    "Error: Could not fetch userid {} for AFK module".format(
-                        user_id
-                    )
-                )
+                print(f"Error: Could not fetch user id {user_id} for AFK module")
                 return
             fst_name = chat.first_name
 
@@ -126,16 +125,17 @@ def reply_afk(update: Update, context: CallbackContext):
 def check_afk(update, context, user_id, fst_name, userc_id):
     if int(userc_id) == int(user_id):
         return
-    is_afk, reason = sql.check_afk_status(user_id)
+    afk_D = sql.check_afk_status(user_id)
+    if not afk_D:
+        return
+    is_afk = afk_D.is_afk
     if is_afk:
-        if not reason:
-            res = "{} is afk".format(fst_name)
-            update.effective_message.reply_text(res, parse_mode=None)
-        else:
-            res = "{} is afk.\nReason: <code>{}</code>".format(
-                html.escape(fst_name), html.escape(reason)
-            )
+        if reason := afk_D.reason:
+            res = f"{html.escape(fst_name)} is afk.\nReason: <code>{html.escape(reason)}</code>"
             update.effective_message.reply_text(res, parse_mode="html")
+        else:
+            res = f"{fst_name} is afk"
+            update.effective_message.reply_text(res, parse_mode=None)
 
 
 def __gdpr__(user_id):

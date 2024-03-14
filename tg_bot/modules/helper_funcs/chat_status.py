@@ -96,7 +96,7 @@ def is_user_ban_protected(update: Update, user_id: int, member: ChatMember = Non
             or user_id in WHITELIST_USERS
             or user_id in SARDEGNA_USERS
             or chat.all_members_are_administrators
-            or (msg.reply_to_message and msg.reply_to_message.sender_chat is not None
+            or (msg and msg.reply_to_message and msg.reply_to_message.sender_chat is not None
                 and msg.reply_to_message.sender_chat.type != "channel")
     ):
         return True
@@ -191,7 +191,7 @@ def whitelist_plus(func):
             return func(update, context, *args, **kwargs)
         else:
             update.effective_message.reply_text(
-                f"You don't have access to use this.\nVisit @YorkTownEagleUnion"
+                f"You don't have access to use this.\nVisit @H4SHLabs"
             )
 
     return is_whitelist_plus_func

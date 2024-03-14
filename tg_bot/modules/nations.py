@@ -20,7 +20,7 @@ from tg_bot.modules.helper_funcs.chat_status import whitelist_plus, dev_plus, su
 from tg_bot.modules.helper_funcs.extraction import extract_user
 from tg_bot.modules.log_channel import gloggable
 from tg_bot.modules.sql import nation_sql as sql
-from tg_bot.modules.helper_funcs.decorators import kigcmd
+from tg_bot.modules.helper_funcs.decorators import kigcmd, rate_limit
 
 def check_user_id(user_id: int, context: CallbackContext) -> Optional[str]:
     bot = context.bot
@@ -36,6 +36,7 @@ def check_user_id(user_id: int, context: CallbackContext) -> Optional[str]:
 @kigcmd(command='addsudo')
 @dev_plus
 @gloggable
+@rate_limit(40, 60)
 def addsudo(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -55,11 +56,11 @@ def addsudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        rt += "Requested HQ to promote a Support user to Sudo."
+        rt += "Requested Eagle Union to promote a Support user to Sudo."
         SUPPORT_USERS.remove(user_id)
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested HQ to promote a Whitelist user to Sudo."
+        rt += "Requested Eagle Union to promote a Whitelist user to Sudo."
         WHITELIST_USERS.remove(user_id)
 
     # will add or update their role
@@ -88,6 +89,7 @@ def addsudo(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='addsupport')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def addsupport(
     update: Update,
     context: CallbackContext,
@@ -106,7 +108,7 @@ def addsupport(
         return ""
 
     if user_id in SUDO_USERS:
-        rt += "Requested HQ to demote this Sudo to Support"
+        rt += "Requested Eagle Union to demote this Sudo to Support"
         SUDO_USERS.remove(user_id)
 
     if user_id in SUPPORT_USERS:
@@ -114,7 +116,7 @@ def addsupport(
         return ""
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested HQ to promote this Whitelist user to Support"
+        rt += "Requested Eagle Union to promote this Whitelist user to Support"
         WHITELIST_USERS.remove(user_id)
 
     sql.set_royal_role(user_id, "supports")
@@ -139,6 +141,7 @@ def addsupport(
 @kigcmd(command='addwhitelist')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def addwhitelist(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -187,6 +190,7 @@ def addwhitelist(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='addsardegna')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def addsardegna(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -239,6 +243,7 @@ def addsardegna(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='removesudo')
 @dev_plus
 @gloggable
+@rate_limit(40, 60)
 def removesudo(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -253,7 +258,7 @@ def removesudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUDO_USERS:
-        message.reply_text("Requested HQ to demote this user to Civilian")
+        message.reply_text("Requested Eagle Union to demote this user to Civilian")
         SUDO_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -276,6 +281,7 @@ def removesudo(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='removesupport')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def removesupport(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -290,7 +296,7 @@ def removesupport(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        message.reply_text("Requested HQ to demote this user to Civilian")
+        message.reply_text("Requested Eagle Union to demote this user to Civilian")
         SUPPORT_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -313,6 +319,7 @@ def removesupport(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='removewhitelist')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def removewhitelist(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -349,6 +356,7 @@ def removewhitelist(update: Update, context: CallbackContext) -> str:
 @kigcmd(command='removesardegna')
 @sudo_plus
 @gloggable
+@rate_limit(40, 60)
 def removesardegna(update: Update, context: CallbackContext) -> str:
     message = update.effective_message
     user = update.effective_user
@@ -382,16 +390,16 @@ def removesardegna(update: Update, context: CallbackContext) -> str:
         return ""
 
 # I added extra new lines
-nations = """ H4SH has bot access levels we call as *"Nation Levels"*
-\n*Sudos* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
+nations = """ Kigyō has bot access levels we call as *"Nation Levels"*
+\n*Eagle Union* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
 \n*God* - Only one exists, bot owner.
-Owner has complete bot access, including bot adminship in chats H4SH is at.
-\n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in H4SH.
-\n*Sakuras* - Have access go globally ban users across H4SH.
+Owner has complete bot access, including bot adminship in chats Kigyō is at.
+\n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in Kigyō.
+\n*Sakuras* - Have access go globally ban users across Kigyō.
 \n*Sardegnas* - Same as Neptunians but can unban themselves if banned.
 \n*Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
-\n*Disclaimer*: The Nation levels in H4SH are there for troubleshooting, support, banning potential scammers.
-Report abuse or ask us more on these at [H4SH Labs](https://t.me/H4SHLabs).
+\n*Disclaimer*: The Nation levels in Kigyō are there for troubleshooting, support, banning potential scammers.
+Report abuse or ask us more on these at [Eagle Union](https://t.me/H4SHLabs).
 """
 
 
@@ -402,6 +410,7 @@ def send_nations(update):
 
 @kigcmd(command='removesardegna')
 @whitelist_plus
+@rate_limit(40, 60)
 def whitelistlist(update: Update, context: CallbackContext):
     bot = context.bot
     reply = "<b>Known Neptunia Nations :</b>\n"
@@ -417,6 +426,7 @@ def whitelistlist(update: Update, context: CallbackContext):
 
 @kigcmd(command='sardegnas')
 @whitelist_plus
+@rate_limit(40, 60)
 def Sardegnalist(update: Update, context: CallbackContext):
     bot = context.bot
     reply = "<b>Known Sardegna Nations :</b>\n"
@@ -431,6 +441,7 @@ def Sardegnalist(update: Update, context: CallbackContext):
 
 @kigcmd(command=["supportlist", "sakuras"])
 @whitelist_plus
+@rate_limit(40, 60)
 def supportlist(update: Update, context: CallbackContext):
     bot = context.bot
     reply = "<b>Known Sakura Nations :</b>\n"
@@ -445,6 +456,7 @@ def supportlist(update: Update, context: CallbackContext):
 
 @kigcmd(command=["sudolist", "royals"])
 @whitelist_plus
+@rate_limit(40, 60)
 def sudolist(update: Update, context: CallbackContext):
     bot = context.bot
     true_sudo = list(set(SUDO_USERS) - set(DEV_USERS))
@@ -460,10 +472,11 @@ def sudolist(update: Update, context: CallbackContext):
 
 @kigcmd(command=["devlist", "eagle"])
 @whitelist_plus
+@rate_limit(40, 60)
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>H4SH Labs Members :</b>\n"
+    reply = "<b>Eagle Union Members :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:
