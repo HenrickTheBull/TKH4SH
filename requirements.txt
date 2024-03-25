@@ -21,7 +21,7 @@ python-telegram-bot==13.15
 requests
 spamwatch
 speedtest-cli
-sqlalchemy==1.4.11
+sqlalchemy==2.0.29
 telethon==1.16.4
 ujson
 pycryptodome
