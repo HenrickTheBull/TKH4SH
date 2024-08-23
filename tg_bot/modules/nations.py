@@ -25,10 +25,10 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, rate_limit
 def check_user_id(user_id: int, context: CallbackContext) -> Optional[str]:
     bot = context.bot
     if not user_id:
-        return "That...is a chat! baka ka omae?"
+        return "⚠️ That's a chat or channel, I can't do that."
 
     elif user_id == bot.id:
-        return "This does not work that way."
+        return "Sorry, that's not how this works. You can't just go around promoting bots."
 
     else:
         return None
@@ -56,11 +56,11 @@ def addsudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        rt += "Requested Eagle Union to promote a Support user to Sudo."
+        rt += "Requested Cent-Com to promote a Support user to Sudo."
         SUPPORT_USERS.remove(user_id)
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested Eagle Union to promote a Whitelist user to Sudo."
+        rt += "Requested Cent-Com to promote a Whitelist user to Sudo."
         WHITELIST_USERS.remove(user_id)
 
     # will add or update their role
@@ -108,7 +108,7 @@ def addsupport(
         return ""
 
     if user_id in SUDO_USERS:
-        rt += "Requested Eagle Union to demote this Sudo to Support"
+        rt += "Requested Cent-Com to demote this Sudo to Support"
         SUDO_USERS.remove(user_id)
 
     if user_id in SUPPORT_USERS:
@@ -116,7 +116,7 @@ def addsupport(
         return ""
 
     if user_id in WHITELIST_USERS:
-        rt += "Requested Eagle Union to promote this Whitelist user to Support"
+        rt += "Requested Cent-Com to promote this Whitelist user to Support"
         WHITELIST_USERS.remove(user_id)
 
     sql.set_royal_role(user_id, "supports")
@@ -258,7 +258,7 @@ def removesudo(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUDO_USERS:
-        message.reply_text("Requested Eagle Union to demote this user to Civilian")
+        message.reply_text("Requested Cent-Com to demote this user to Civilian")
         SUDO_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -296,7 +296,7 @@ def removesupport(update: Update, context: CallbackContext) -> str:
         return ""
 
     if user_id in SUPPORT_USERS:
-        message.reply_text("Requested Eagle Union to demote this user to Civilian")
+        message.reply_text("Requested Cent-Com to demote this user to Civilian")
         SUPPORT_USERS.remove(user_id)
         sql.remove_royal(user_id)
 
@@ -391,7 +391,7 @@ def removesardegna(update: Update, context: CallbackContext) -> str:
 
 # I added extra new lines
 nations = """ Kigyō has bot access levels we call as *"Nation Levels"*
-\n*Eagle Union* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
+\n*Cent-Com* - Devs who can access the bots server and can execute, edit, modify bot code. Can also manage other Nations
 \n*God* - Only one exists, bot owner.
 Owner has complete bot access, including bot adminship in chats Kigyō is at.
 \n*Royals* - Have super user access, can gban, manage Nations lower than them and are admins in Kigyō.
@@ -399,7 +399,7 @@ Owner has complete bot access, including bot adminship in chats Kigyō is at.
 \n*Sardegnas* - Same as Neptunians but can unban themselves if banned.
 \n*Neptunians* - Cannot be banned, muted flood kicked but can be manually banned by admins.
 \n*Disclaimer*: The Nation levels in Kigyō are there for troubleshooting, support, banning potential scammers.
-Report abuse or ask us more on these at [Eagle Union](https://t.me/H4SHLabs).
+Report abuse or ask us more on these at [Cent-Com](https://t.me/H4SHLabs).
 """
 
 
@@ -476,7 +476,7 @@ def sudolist(update: Update, context: CallbackContext):
 def devlist(update: Update, context: CallbackContext):
     bot = context.bot
     true_dev = list(set(DEV_USERS) - {OWNER_ID})
-    reply = "<b>Eagle Union Members :</b>\n"
+    reply = "<b>Cent-Com Members :</b>\n"
     for each_user in true_dev:
         user_id = int(each_user)
         try:

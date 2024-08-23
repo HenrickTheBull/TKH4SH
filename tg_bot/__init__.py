@@ -25,15 +25,15 @@ def get_user_list(key):
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[RotatingFileHandler('kigyo.log', maxBytes=1024*1024, backupCount=5), logging.StreamHandler()],
+    handlers=[RotatingFileHandler('hash.log', maxBytes=1024*1024, backupCount=5), logging.StreamHandler()],
     level=logging.INFO,
 )
 
 #print(flag)
-log = logging.getLogger('[Enterprise]')
+log = logging.getLogger('[Cent-Com]')
 logging.getLogger('ptbcontrib.postgres_persistence.postgrespersistence').setLevel(logging.WARNING)
 log.info("[H4SH] H4SH is starting. | An H4SH Labs Project. | Licensed under GPLv3.")
-log.info("[KIGYO] Project maintained by: github.com/HenrickTheBull (t.me/thebullbastard")
+log.info("[H4SH] Project maintained by: github.com/HenrickTheBull (t.me/thebullbastard")
 
 # if version < 3.6, stop bot.
 if sys.version_info[0] < 3 or sys.version_info[1] < 7:

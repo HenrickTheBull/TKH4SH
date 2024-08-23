@@ -72,13 +72,13 @@ def error_callback(update: Update, context: CallbackContext):
         context.bot.send_document(
             OWNER_ID,
             open("error.txt", "rb"),
-            caption=f"#{context.error.identifier}\n<b>Your sugar mommy got an error for you, you cute guy:</b>\n<code>{e}</code>",
+            caption=f"#{context.error.identifier}\n<b>Cent-Com picked up an error:</b>\n<code>{e}</code>",
             parse_mode="html",
         )
         return
     context.bot.send_message(
         OWNER_ID,
-        text=f"#{context.error.identifier}\n<b>Your sugar mommy got an error for you, you cute guy:</b>\n<code>{e}</code>",
+        text=f"#{context.error.identifier}\n<b>Cent-Com picked up an error:</b>\n<code>{e}</code>",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("PrivateBin", url=paste_url)]]),
         parse_mode="html",
     )
