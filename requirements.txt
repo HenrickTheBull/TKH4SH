@@ -27,4 +27,3 @@ ujson
 pycryptodome
 base58
 pytimeparse
-SibylSystem

@@ -49,8 +49,6 @@ from telegram.ext import (
 from telegram.utils.helpers import escape_markdown, mention_html, mention_markdown
 import tg_bot.modules.sql.log_channel_sql as logsql
 from ..modules.helper_funcs.anonymous import user_admin, AdminPerms
-from .sibylsystem import sibylClient, does_chat_sibylban
-from SibylSystem import GeneralException
 
 VALID_WELCOME_FORMATTERS = [
     "first",
@@ -197,23 +195,6 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
         except BadRequest:
             pass
         return
-
-    data = None
-    if sibylClient and does_chat_sibylban(chat.id):
-            try:
-                data = sibylClient.get_info(user.id)
-            except GeneralException:
-                pass
-            except BaseException as e:
-                log.error(e)
-                pass
-            if data and data.banned:
-                    return # all modes handle it in different ways
-
-    if sw != None:
-        sw_ban = sw.get_ban(new_mem.id)
-        if sw_ban:
-            return
 
     if should_welc:
         # Give the owner a special welcome
@@ -881,7 +862,7 @@ def reset_goodbye(update: Update, context: CallbackContext) -> str:
         f"<b>{html.escape(chat.title)}:</b>\n"
         f"#RESET_GOODBYE\n"
         f"<b>Admin:</b> {mention_html(user.id, user.first_name)}\n"
-        f"Reset the goodbye message."
+        f"Reset the goodbye message to default."
     )
 
 
