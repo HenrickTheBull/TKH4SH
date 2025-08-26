@@ -38,7 +38,8 @@ The Support group can be reached out to at [Grand Aurochs Software](https://t.me
 - `cp sample_config.ini config.ini`
 - *Fill in all the vars*
 - `pip3 install -U -r requirements.txt`
-- *And finally* `python3 -m tg_bot`
+- *Setup Virtual Enviroment for Python 3 and The Bot*
+- *And finally inside the venv* `python3 -m tg_bot`
 
 *Enjoy!*
 
