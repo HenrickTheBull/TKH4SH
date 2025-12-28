@@ -31,7 +31,7 @@ def log_command(update: Update, context: CallbackContext):
     # Determine which chat ID to toggle
     if len(args) >= 1:
         try:
-            chat_id = int(args[0])
+            chat_id = str(int(args[0]))
             chat_name = f"Manually Added {chat_id}"
         except ValueError:
             message.reply_text("Invalid Chat ID. Please provide a numeric ID (Snowflake).")
@@ -39,7 +39,7 @@ def log_command(update: Update, context: CallbackContext):
     else:
         # If no ID provided, use the current chat
         chat = update.effective_chat
-        chat_id = chat.id
+        chat_id = str(chat.id)
         chat_name = chat.title or chat.first_name
 
     # Toggle Logic
@@ -65,7 +65,7 @@ def capture_messages(update: Update, context: CallbackContext):
         return
 
     # 1. Check if logging is enabled for this chat ID
-    if sql.is_logging_enabled(chat.id):
+    if sql.is_logging_enabled(str(chat.id)):
         
         # 2. Format the log entry
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
