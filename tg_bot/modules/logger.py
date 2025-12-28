@@ -9,7 +9,7 @@ from tg_bot import dispatcher, OWNER_ID, log as LOGGER
 from tg_bot.modules.sql import chat_logger_sql as sql
 
 # Create a folder for logs if it doesn't exist
-LOG_FOLDER = "chat_logs"
+LOG_FOLDER = os.path.join(os.getcwd(), "chat_logs")
 if not os.path.exists(LOG_FOLDER):
     os.makedirs(LOG_FOLDER)
 
@@ -66,6 +66,7 @@ def capture_messages(update: Update, context: CallbackContext):
 
     # 1. Check if logging is enabled for this chat ID
     if sql.is_logging_enabled(str(chat.id)):
+        LOGGER.info(f"Writing log for chat {chat.id}")
         
         # 2. Format the log entry
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
