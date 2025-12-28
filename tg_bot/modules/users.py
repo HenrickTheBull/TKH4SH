@@ -1,7 +1,7 @@
 import contextlib
 from io import BytesIO
 from time import sleep
-from tg_bot.modules.helper_funcs.decorators import rate_limit
+from tg_bot.modules.helper_funcs.decorators import rate_limit, kigcmd
 
 import tg_bot.modules.sql.users_sql as sql
 from tg_bot import DEV_USERS, log, OWNER_ID, dispatcher
@@ -158,7 +158,7 @@ def log_user(update: Update, _: CallbackContext):
                 continue
             sql.update_user(user.id, user.username, chat.id, chat.title)
 
-
+@kigcmd(command="chatlist")
 @sudo_plus
 @rate_limit(40, 60)
 def chats(update: Update, context: CallbackContext):

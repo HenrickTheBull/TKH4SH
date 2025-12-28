@@ -379,7 +379,6 @@ def unban(update: Update, context: CallbackContext) -> Optional[str]:
 
 
 @kigcmd(command='selfunban', pass_args=True)
-@connection_status
 @bot_admin
 @can_restrict
 @gloggable
