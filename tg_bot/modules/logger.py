@@ -5,7 +5,7 @@ from datetime import datetime
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext, CommandHandler, MessageHandler, Filters
 
-from tg_bot import dispatcher, OWNER_ID, LOGGER
+from tg_bot import dispatcher, OWNER_ID, log as LOGGER
 from tg_bot.modules.sql import chat_logger_sql as sql
 
 # Create a folder for logs if it doesn't exist
