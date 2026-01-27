@@ -11,14 +11,25 @@ import tg_bot.modules.sql.pipe_sql as sql
 
 def model_to_dict(obj):
     """Recursively convert atproto model objects to dictionaries."""
-    if hasattr(obj, 'model_dump'):
-        obj = obj.model_dump()
-    elif hasattr(obj, '__dict__'):
+    # Handle None and basic types first
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
+    
+    # Try to convert model objects to dict
+    if hasattr(obj, 'model_dump') and callable(getattr(obj, 'model_dump', None)):
+        try:
+            obj = obj.model_dump()
+        except Exception as e:
+            print(f"Error calling model_dump: {e}")
+            if hasattr(obj, '__dict__'):
+                obj = vars(obj)
+    elif hasattr(obj, '__dict__') and not isinstance(obj, type):
         obj = vars(obj)
     
+    # Recursively process collections
     if isinstance(obj, dict):
         return {k: model_to_dict(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    elif isinstance(obj, (list, tuple)):
         return [model_to_dict(item) for item in obj]
     else:
         return obj
