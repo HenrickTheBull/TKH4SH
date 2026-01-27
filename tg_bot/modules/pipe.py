@@ -46,10 +46,21 @@ def get_current_track(client: Client, did: str):
         
         if response and response.records:
             record = response.records[0]
-            return record.value
+            # Convert to dict if it's a model object
+            value = record.value
+            if hasattr(value, '__dict__'):
+                value = vars(value)
+            elif hasattr(value, 'model_dump'):
+                value = value.model_dump()
+            
+            # Extract the item field which contains the track info
+            if isinstance(value, dict) and 'item' in value:
+                return value['item']
+            return value
         return None
     except Exception as e:
         print(f"Error getting current track: {e}")
+        return None
         return None
 
 
@@ -67,7 +78,18 @@ def get_recent_tracks(client: Client, did: str, limit: int = 3):
         response = client.com.atproto.repo.list_records(params)
         
         if response and response.records:
-            return [record.value for record in response.records]
+            tracks = []
+            for record in response.records:
+                value = record.value
+                # Convert to dict if it's a model object
+                if hasattr(value, '__dict__'):
+                    value = vars(value)
+                elif hasattr(value, 'model_dump'):
+                    value = value.model_dump()
+                
+                # feed.play records have the data directly, not nested in item
+                tracks.append(value)
+            return tracks
         return []
     except Exception as e:
         print(f"Error getting recent tracks: {e}")
@@ -147,9 +169,11 @@ def pipe(update: Update, _):
         
         if current:
             # User is currently listening
-            artist = current.get('artist', 'Unknown Artist')
-            track = current.get('track', 'Unknown Track')
-            album = current.get('album', '')
+            # Extract artist name from artists array
+            artists = current.get('artists', [])
+            artist = artists[0].get('artistName', 'Unknown Artist') if artists else 'Unknown Artist'
+            track = current.get('trackName', 'Unknown Track')
+            album = current.get('releaseName', '')
             
             rep = f"{user} is currently listening to:\n"
             rep += f"🎧  <code>{artist} - {track}</code>"
@@ -165,8 +189,10 @@ def pipe(update: Update, _):
             
             rep = f"{user} was listening to:\n"
             for play in recent:
-                artist = play.get('artist', 'Unknown Artist')
-                track = play.get('track', 'Unknown Track')
+                # Extract artist name from artists array
+                artists = play.get('artists', [])
+                artist = artists[0].get('artistName', 'Unknown Artist') if artists else 'Unknown Artist'
+                track = play.get('trackName', 'Unknown Track')
                 rep += f"🎧  <code>{artist} - {track}</code>\n"
             
             # Add note about recent scrobbles
@@ -175,7 +201,7 @@ def pipe(update: Update, _):
         
         msg.reply_text(rep, parse_mode=ParseMode.HTML)
         
-    except exceptions.AtProtoError as e:
+    except exceptions.AtProtocolError as e:
         msg.reply_text(
             f"An error occurred while fetching your data from ATProtocol.\n"
             f"Please make sure your handle is correct and you have Pipe/Teal scrobbling enabled."
