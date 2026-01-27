@@ -36,11 +36,13 @@ def get_current_track(client: Client, did: str):
     """
     try:
         # Query the repo for the status record
-        response = client.com.atproto.repo.list_records(
+        from atproto import models
+        params = models.ComAtprotoRepoListRecords.Params(
             repo=did,
             collection="fm.teal.alpha.actor.status",
             limit=1
         )
+        response = client.com.atproto.repo.list_records(params)
         
         if response and response.records:
             record = response.records[0]
@@ -56,11 +58,13 @@ def get_recent_tracks(client: Client, did: str, limit: int = 3):
     Get recent scrobbles from fm.teal.alpha.feed.play
     """
     try:
-        response = client.com.atproto.repo.list_records(
+        from atproto import models
+        params = models.ComAtprotoRepoListRecords.Params(
             repo=did,
             collection="fm.teal.alpha.feed.play",
             limit=limit
         )
+        response = client.com.atproto.repo.list_records(params)
         
         if response and response.records:
             return [record.value for record in response.records]
@@ -165,17 +169,9 @@ def pipe(update: Update, _):
                 track = play.get('track', 'Unknown Track')
                 rep += f"🎧  <code>{artist} - {track}</code>\n"
             
-            # Try to get total scrobble count
-            try:
-                all_plays = client.com.atproto.repo.list_records(
-                    repo=did,
-                    collection="fm.teal.alpha.feed.play",
-                    limit=1
-                )
-                if hasattr(all_plays, 'cursor') or len(recent) > 0:
-                    rep += f"\n(Recent scrobbles from Pipe)"
-            except:
-                pass
+            # Add note about recent scrobbles
+            if len(recent) > 0:
+                rep += f"\n(Recent scrobbles from Pipe)"
         
         msg.reply_text(rep, parse_mode=ParseMode.HTML)
         
