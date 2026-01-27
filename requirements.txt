@@ -1,5 +1,6 @@
 aiohttp>=2.2.5
 alphabet_detector
+atproto
 beautifulsoup4
 bleach
 cachetools

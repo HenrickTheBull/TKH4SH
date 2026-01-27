@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import sys
+import platform
 from time import sleep
 
 from telegram.ext.callbackqueryhandler import CallbackQueryHandler
