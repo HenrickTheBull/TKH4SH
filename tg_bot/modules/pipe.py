@@ -9,6 +9,21 @@ from tg_bot.modules.helper_funcs.decorators import kigcmd, rate_limit
 import tg_bot.modules.sql.pipe_sql as sql
 
 
+def model_to_dict(obj):
+    """Recursively convert atproto model objects to dictionaries."""
+    if hasattr(obj, 'model_dump'):
+        obj = obj.model_dump()
+    elif hasattr(obj, '__dict__'):
+        obj = vars(obj)
+    
+    if isinstance(obj, dict):
+        return {k: model_to_dict(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [model_to_dict(item) for item in obj]
+    else:
+        return obj
+
+
 def resolve_handle(handle: str):
     """
     Resolve an ATProtocol handle to get DID and PDS.
@@ -46,12 +61,8 @@ def get_current_track(client: Client, did: str):
         
         if response and response.records:
             record = response.records[0]
-            # Convert to dict if it's a model object
-            value = record.value
-            if hasattr(value, '__dict__'):
-                value = vars(value)
-            elif hasattr(value, 'model_dump'):
-                value = value.model_dump()
+            # Convert to dict recursively
+            value = model_to_dict(record.value)
             
             # Extract the item field which contains the track info
             if isinstance(value, dict) and 'item' in value:
@@ -60,7 +71,6 @@ def get_current_track(client: Client, did: str):
         return None
     except Exception as e:
         print(f"Error getting current track: {e}")
-        return None
         return None
 
 
@@ -80,14 +90,8 @@ def get_recent_tracks(client: Client, did: str, limit: int = 3):
         if response and response.records:
             tracks = []
             for record in response.records:
-                value = record.value
-                # Convert to dict if it's a model object
-                if hasattr(value, '__dict__'):
-                    value = vars(value)
-                elif hasattr(value, 'model_dump'):
-                    value = value.model_dump()
-                
-                # feed.play records have the data directly, not nested in item
+                # Convert to dict recursively
+                value = model_to_dict(record.value)
                 tracks.append(value)
             return tracks
         return []
