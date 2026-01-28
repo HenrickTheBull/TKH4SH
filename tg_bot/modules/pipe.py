@@ -56,6 +56,13 @@ def resolve_handle(handle: str):
         return None, None
 
 
+def get_album_art_url(release_mbid: str):
+    """Get album art URL from MusicBrainz Cover Art Archive."""
+    if not release_mbid:
+        return None
+    return f"https://coverartarchive.org/release/{release_mbid}/front"
+
+
 def get_current_track(client: Client, did: str):
     """
     Get the currently playing track from fm.teal.alpha.actor.status
@@ -209,11 +216,17 @@ def pipe(update: Update, _):
                 artist = 'Unknown Artist'
             track = current.get('trackName', 'Unknown Track')
             album = current.get('releaseName', '')
+            release_mbid = current.get('releaseMbId', '')
             
             rep = f"{user} is currently listening to:\n"
             rep += f"🎧  <code>{artist} - {track}</code>"
             if album:
                 rep += f"\n📀  <code>{album}</code>"
+            
+            # Add album art if available
+            album_art_url = get_album_art_url(release_mbid)
+            if album_art_url:
+                rep += f"<a href='{album_art_url}'>&#8205;</a>"
         else:
             # Get recent tracks instead
             recent = get_recent_tracks(client, did, limit=3)
