@@ -183,6 +183,10 @@ def pipe(update: Update, _):
         current = get_current_track(client, did)
         
         if current:
+            # Debug: print the data structure
+            print(f"Current track data: {current}")
+            print(f"Artists field: {current.get('artists', [])}")
+            
             # User is currently listening
             # Extract artist name from artists array
             artists = current.get('artists', [])
