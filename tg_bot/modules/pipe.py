@@ -75,9 +75,17 @@ def get_current_track(client: Client, did: str):
             # Convert to dict recursively
             value = model_to_dict(record.value)
             
+            # Unwrap _data fields if present
+            if isinstance(value, dict) and '_data' in value:
+                value = value['_data']
+            
             # Extract the item field which contains the track info
             if isinstance(value, dict) and 'item' in value:
-                return value['item']
+                item = value['item']
+                # Unwrap _data in item if present
+                if isinstance(item, dict) and '_data' in item:
+                    return item['_data']
+                return item
             return value
         return None
     except Exception as e:
@@ -103,6 +111,9 @@ def get_recent_tracks(client: Client, did: str, limit: int = 3):
             for record in response.records:
                 # Convert to dict recursively
                 value = model_to_dict(record.value)
+                # Unwrap _data field if present
+                if isinstance(value, dict) and '_data' in value:
+                    value = value['_data']
                 tracks.append(value)
             return tracks
         return []
@@ -190,7 +201,12 @@ def pipe(update: Update, _):
             # User is currently listening
             # Extract artist name from artists array
             artists = current.get('artists', [])
-            artist = artists[0].get('artistName', 'Unknown Artist') if artists else 'Unknown Artist'
+            if artists and isinstance(artists[0], dict):
+                # Unwrap _data from artist object if present
+                artist_obj = artists[0].get('_data', artists[0]) if '_data' in artists[0] else artists[0]
+                artist = artist_obj.get('artistName', 'Unknown Artist')
+            else:
+                artist = 'Unknown Artist'
             track = current.get('trackName', 'Unknown Track')
             album = current.get('releaseName', '')
             
@@ -210,7 +226,12 @@ def pipe(update: Update, _):
             for play in recent:
                 # Extract artist name from artists array
                 artists = play.get('artists', [])
-                artist = artists[0].get('artistName', 'Unknown Artist') if artists else 'Unknown Artist'
+                if artists and isinstance(artists[0], dict):
+                    # Unwrap _data from artist object if present
+                    artist_obj = artists[0].get('_data', artists[0]) if '_data' in artists[0] else artists[0]
+                    artist = artist_obj.get('artistName', 'Unknown Artist')
+                else:
+                    artist = 'Unknown Artist'
                 track = play.get('trackName', 'Unknown Track')
                 rep += f"🎧  <code>{artist} - {track}</code>\n"
             
