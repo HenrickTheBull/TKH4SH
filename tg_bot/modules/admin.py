@@ -2,7 +2,7 @@ import html
 from typing import Optional
 
 from telegram import ParseMode, Update
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TelegramError, Unauthorized
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown, mention_html
 
@@ -328,29 +328,100 @@ def unpin(update: Update, context: CallbackContext) -> str:
 
 
 @kigcmd(command="invitelink", can_disable=False)
-@bot_admin
-@user_admin(AdminPerms.CAN_INVITE_USERS)
 @connection_status
 @rate_limit(40, 60)
 def invite(update: Update, context: CallbackContext):
     bot = context.bot
-    chat = update.effective_chat
+    args = context.args
+    message = update.effective_message
+    user = update.effective_user
 
-    if chat.username:
-        update.effective_message.reply_text(f"https://t.me/{chat.username}")
-    elif chat.type in [chat.SUPERGROUP, chat.CHANNEL]:
-        bot_member = chat.get_member(bot.id)
-        if bot_member.can_invite_users:
-            invitelink = bot.exportChatInviteLink(chat.id)
-            update.effective_message.reply_text(invitelink)
-        else:
-            update.effective_message.reply_text(
-                "I don't have access to the invite link, try changing my permissions!"
-            )
+    # 1. Determine target chat ID
+    if args:
+        chat_id_str = args[0]
+        try:
+            chat_id = int(chat_id_str)
+        except ValueError:
+            if chat_id_str.startswith('@'):
+                chat_id = chat_id_str
+            else:
+                message.reply_text("Please provide a valid chat ID (integer) or username (starting with @).")
+                return
     else:
-        update.effective_message.reply_text(
-            "I can only give you invite links for supergroups and channels, sorry!"
-        )
+        chat = update.effective_chat
+        if chat.type == chat.PRIVATE:
+            message.reply_text("Please provide a group chat ID as an argument.")
+            return
+        chat_id = chat.id
+
+    # 2. Retrieve target chat details
+    try:
+        target_chat = bot.get_chat(chat_id)
+    except (BadRequest, Unauthorized):
+        message.reply_text("I am not in that chat, or the chat ID is invalid, or I do not have access to it.")
+        return
+    except TelegramError as e:
+        message.reply_text(f"An error occurred while fetching chat: {e.message}")
+        return
+
+    if target_chat.type == target_chat.PRIVATE:
+        message.reply_text("The specified chat ID corresponds to a private chat, not a group or channel.")
+        return
+
+    # 3. Check if requester has permission (user_admin check on target_chat)
+    from tg_bot import DEV_USERS, SUDO_USERS
+    is_authorized = False
+    if user.id in DEV_USERS or user.id in SUDO_USERS:
+        is_authorized = True
+    else:
+        try:
+            user_member = target_chat.get_member(user.id)
+            if user_member.status == 'creator':
+                is_authorized = True
+            elif user_member.status == 'administrator' and user_member.can_invite_users:
+                is_authorized = True
+        except TelegramError:
+            pass
+
+    if not is_authorized:
+        message.reply_text("Who dis non-admin telling me what to do? You must be an administrator with invite privileges in that chat.")
+        return
+
+    # 4. Retrieve invite link
+    invitelink = None
+    if target_chat.username:
+        invitelink = f"https://t.me/{target_chat.username}"
+    else:
+        try:
+            bot_member = target_chat.get_member(bot.id)
+            if bot_member.status in ('administrator', 'creator') and (bot_member.status == 'creator' or bot_member.can_invite_users):
+                invitelink = bot.exportChatInviteLink(target_chat.id)
+            else:
+                message.reply_text("I need to be an administrator with invite privileges in that chat to retrieve the invite link.")
+                return
+        except TelegramError:
+            message.reply_text("I am not in that chat or cannot access its members.")
+            return
+
+    if not invitelink:
+        message.reply_text("Failed to retrieve or generate the invite link.")
+        return
+
+    # 5. Send invite link to user via DM
+    if update.effective_chat.type == 'private':
+        message.reply_text(f"Here is the invite link for <b>{html.escape(target_chat.title)}</b>:\n{invitelink}", parse_mode=ParseMode.HTML)
+    else:
+        try:
+            bot.send_message(
+                chat_id=user.id,
+                text=f"Here is the invite link for <b>{html.escape(target_chat.title)}</b>:\n{invitelink}",
+                parse_mode=ParseMode.HTML
+            )
+            message.reply_text("I've sent the invite link to you in DMs!")
+        except Unauthorized:
+            message.reply_text("Please start a conversation with me in DMs first so I can send you the invite link.")
+        except TelegramError:
+            message.reply_text("Failed to send you a DM. Please check your privacy settings or start a conversation with me first.")
 
 
 @kigcmd(command=["admin", "admins"])
