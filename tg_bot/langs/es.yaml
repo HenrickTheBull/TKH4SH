@@ -183,12 +183,7 @@ antispam_help: |
    Anti-Spam, utilizado por los desarrolladores de bots para prohibir a los spammers en todos los grupos.  Esto ayuda a proteger
    usted y sus grupos eliminando los flooders de spam lo más rápido posible.
    * Nota: * Los usuarios pueden apelar gbans o denunciar spammers en @H4SHLabs
-  
-   ¡Kigyo también integra la API de @Spamwatch para eliminar los spammers tanto como sea posible de su sala de chat!
-   * ¿Qué es SpamWatch? *
-   SpamWatch mantiene una gran lista de prohibiciones constantemente actualizada de spambots, trolls, spammers de bitcoin y personajes desagradables [.] (Https://telegra.ph/file/c1051d264a5b4146bd71e.jpg)
-   Ayude constantemente a expulsar a los spammers de su grupo automáticamente. Por lo tanto, no tendrá que preocuparse de que los spammers asalten su grupo.
-   * Nota: * Los usuarios pueden apelar las prohibiciones de spamwatch en @SpamwatchSupport
+
 gtranslate_help: |
   • `/tr` o` / tl` (código de idioma) como respuesta a un mensaje largo.
    * Ejemplo: * `/tr en` *: * traduce algo al inglés.

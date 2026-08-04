@@ -15,7 +15,6 @@ from tg_bot import (
     SUPPORT_USERS,
     SARDEGNA_USERS,
     WHITELIST_USERS,
-    sw,
     dispatcher,
 )
 from tg_bot.modules.helper_funcs.chat_status import (
@@ -209,11 +208,6 @@ def new_member(update: Update, context: CallbackContext):  # sourcery no-metrics
                 pass
             if data and data.banned:
                     return # all modes handle it in different ways
-
-    if sw != None:
-        sw_ban = sw.get_ban(new_mem.id)
-        if sw_ban:
-            return
 
     if should_welc:
         # Give the owner a special welcome
@@ -598,12 +592,6 @@ def left_member(update: Update, context: CallbackContext):  # sourcery no-metric
     if should_goodbye:
         left_mem = update.chat_member.new_chat_member.user
         if left_mem:
-
-            # Thingy for spamwatched users
-            if sw:
-                sw_ban = sw.get_ban(left_mem.id)
-                if sw_ban:
-                    return
 
             # Dont say goodbyes to gbanned users
             if is_user_gbanned(left_mem.id):

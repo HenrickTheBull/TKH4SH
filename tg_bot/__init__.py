@@ -3,7 +3,6 @@ import os
 import sys
 import time
 from typing import List
-import spamwatch
 import telegram.ext as tg
 from telethon import TelegramClient
 from telethon.sessions import MemorySession
@@ -72,7 +71,6 @@ class KigyoINIT:
         self.GBAN_LOGS: int = self.parser.getint('GBAN_LOGS', None)
         self.NO_LOAD = self.parser.get("NO_LOAD").split()
         self.NO_LOAD: List[str] = list(map(str, self.NO_LOAD))
-        self.spamwatch_api: str = self.parser.get('spamwatch_api', None)
         self.CASH_API_KEY: str = self.parser.get('CASH_API_KEY', None)
         self.TIME_API_KEY: str = self.parser.get('TIME_API_KEY', None)
         self.WALL_API: str = self.parser.get('WALL_API', None)
@@ -85,20 +83,6 @@ class KigyoINIT:
         self.DROP_UPDATES: bool = self.parser.getboolean("DROP_UPDATES", True)
         self.BOT_API_URL: str = self.parser.get('BOT_API_URL', "https://api.telegram.org/bot")
         self.BOT_API_FILE_URL: str = self.parser.get('BOT_API_FILE_URL', "https://api.telegram.org/file/bot")
-
-
-    def init_sw(self):
-        if self.spamwatch_api is None:
-            log.warning("SpamWatch API key is missing! Check your config.ini")
-            return None
-        else:
-            try:
-                sw = spamwatch.Client(spamwatch_api)
-                return sw
-            except:
-                sw = None
-                log.warning("Can't connect to SpamWatch!")
-                return sw
 
 
 KInit = KigyoINIT(parser=kigconfig)
@@ -129,15 +113,11 @@ SUPPORT_USERS = get_user_list("supports")
 SARDEGNA_USERS = get_user_list("sardegnas")
 WHITELIST_USERS = get_user_list("whitelists")
 SPAMMERS = get_user_list("spammers")
-spamwatch_api = KInit.spamwatch_api
 CASH_API_KEY = KInit.CASH_API_KEY
 TIME_API_KEY = KInit.TIME_API_KEY
 WALL_API = KInit.WALL_API
 LASTFM_API_KEY = KInit.LASTFM_API_KEY
 CF_API_KEY = KInit.CF_API_KEY
-
-# SpamWatch
-sw = KInit.init_sw()
 
 
 updater = tg.Updater(token=TOKEN, base_url=KInit.BOT_API_URL, base_file_url=KInit.BOT_API_FILE_URL, workers=min(32, os.cpu_count() + 4), request_kwargs={"read_timeout": 10, "connect_timeout": 10})
